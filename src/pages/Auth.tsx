@@ -1,11 +1,29 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Leaf, Eye, EyeOff, ArrowLeft, ArrowRight, Check,
-  Upload, MapPin, User, Building2, Lock, Mail, Phone, Globe,
-  ShieldCheck, Sparkles, Package, Handshake, Truck, Settings2,
-  Wheat, UtensilsCrossed, Users, Zap, BarChart3, Recycle,
-  FileText, Award, TrendingUp,
+  Leaf,
+  Eye,
+  EyeOff,
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Upload,
+  MapPin,
+  User,
+  Building2,
+  Lock,
+  Mail,
+  Phone,
+  Globe,
+  ShieldCheck,
+  Sparkles,
+  Package,
+  Handshake,
+  Truck,
+  Settings2,
+  Wheat,
+  UtensilsCrossed,
+  Users,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,10 +67,25 @@ const roleOptions = [
   },
 ];
 
-const STEPS = ["Role", "Account", "Organization", "Location", "Documents", "Done"];
+const STEPS = [
+  "Role",
+  "Account",
+  "Organization",
+  "Location",
+  "Documents",
+  "Done",
+];
 
 /* ── Shared field wrapper ── */
-function Field({ label, icon, children }: { label: string; icon?: React.ReactNode; children: React.ReactNode }) {
+function Field({
+  label,
+  icon,
+  children,
+}: {
+  label: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <div className="space-y-1.5">
       <Label className="text-xs font-medium text-white/50 flex items-center gap-1.5">
@@ -75,7 +108,10 @@ function DarkInput(props: React.ComponentProps<typeof Input>) {
 }
 
 /* ── Dark styled select ── */
-function DarkSelect({ children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
+function DarkSelect({
+  children,
+  ...props
+}: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
       {...props}
@@ -89,22 +125,31 @@ function DarkSelect({ children, ...props }: React.SelectHTMLAttributes<HTMLSelec
 /* ═══════════════════════════════════════════════
    LOGIN
 ═══════════════════════════════════════════════ */
-function LoginPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "onLogin">) {
+function LoginPage({
+  onNavigate,
+  onLogin,
+}: Pick<AuthProps, "onNavigate" | "onLogin">) {
   const [showPwd, setShowPwd] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loginRole, setLoginRole] = useState<"donor" | "ngo" | "volunteer" | "admin">("donor");
+  const [loginRole, setLoginRole] = useState<
+    "donor" | "ngo" | "volunteer" | "admin"
+  >("donor");
 
   const demoRoles = [
     { id: "donor" as const, label: "Donor", Icon: Package, color: "#22c55e" },
     { id: "ngo" as const, label: "NGO", Icon: Handshake, color: "#38bdf8" },
-    { id: "volunteer" as const, label: "Volunteer", Icon: Truck, color: "#f59e0b" },
+    {
+      id: "volunteer" as const,
+      label: "Volunteer",
+      Icon: Truck,
+      color: "#f59e0b",
+    },
     { id: "admin" as const, label: "Admin", Icon: Settings2, color: "#a78bfa" },
   ];
 
   return (
     <div className="min-h-screen bg-[#030303] flex overflow-hidden">
-
       {/* ── Left hero panel ── */}
       <div className="hidden lg:flex w-[480px] xl:w-[540px] shrink-0 relative flex-col overflow-hidden border-r border-white/[0.05]">
         <AnimatedGridBackground />
@@ -122,11 +167,16 @@ function LoginPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "onLo
         {/* Content */}
         <div className="relative z-10 flex flex-col h-full p-10">
           {/* Logo */}
-          <button onClick={() => onNavigate("landing")} className="flex items-center gap-2.5 w-fit">
+          <button
+            onClick={() => onNavigate("landing")}
+            className="flex items-center gap-2.5 w-fit"
+          >
             <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-900/50">
               <Leaf size={15} className="text-white" />
             </div>
-            <span className="font-semibold text-white tracking-tight">FoodBridge</span>
+            <span className="font-semibold text-white tracking-tight">
+              FoodBridge
+            </span>
           </button>
 
           {/* Headline */}
@@ -140,13 +190,21 @@ function LoginPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "onLo
               <Sparkles size={11} /> Cloud-native food rescue
             </div>
             <h2 className="text-4xl font-bold text-white tracking-tight leading-[1.1] mb-4">
-              Rescue food.<br />
-              <span style={{ background: "linear-gradient(135deg,#4ade80,#22c55e)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              Rescue food.
+              <br />
+              <span
+                style={{
+                  background: "linear-gradient(135deg,#4ade80,#22c55e)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
                 Create impact.
               </span>
             </h2>
             <p className="text-white/40 leading-relaxed text-sm max-w-xs">
-              Join 800+ organizations and volunteers who rescue surplus food daily through intelligent matching.
+              Join 800+ organizations and volunteers who rescue surplus food
+              daily through intelligent matching.
             </p>
           </motion.div>
 
@@ -158,10 +216,30 @@ function LoginPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "onLo
             className="grid grid-cols-2 gap-3"
           >
             {[
-              { val: "284K kg", label: "Food Rescued", accent: "#4ade80", Icon: Wheat },
-              { val: "48,200", label: "Meals Given", accent: "#38bdf8", Icon: UtensilsCrossed },
-              { val: "138", label: "NGO Partners", accent: "#a78bfa", Icon: Handshake },
-              { val: "512", label: "Volunteers", accent: "#f59e0b", Icon: Users },
+              {
+                val: "284K kg",
+                label: "Food Rescued",
+                accent: "#4ade80",
+                Icon: Wheat,
+              },
+              {
+                val: "48,200",
+                label: "Meals Given",
+                accent: "#38bdf8",
+                Icon: UtensilsCrossed,
+              },
+              {
+                val: "138",
+                label: "NGO Partners",
+                accent: "#a78bfa",
+                Icon: Handshake,
+              },
+              {
+                val: "512",
+                label: "Volunteers",
+                accent: "#f59e0b",
+                Icon: Users,
+              },
             ].map((s, i) => (
               <motion.div
                 key={i}
@@ -171,12 +249,22 @@ function LoginPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "onLo
               >
                 <GlowingStarsBackgroundCard className="rounded-xl border-white/[0.06] bg-white/[0.03] p-0">
                   <div className="px-4 py-3 flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: s.accent + "18" }}>
+                    <div
+                      className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                      style={{ background: s.accent + "18" }}
+                    >
                       <s.Icon size={14} style={{ color: s.accent }} />
                     </div>
                     <div>
-                      <div className="text-base font-bold font-mono leading-none" style={{ color: s.accent }}>{s.val}</div>
-                      <div className="text-[10px] text-white/30 mt-0.5">{s.label}</div>
+                      <div
+                        className="text-base font-bold font-mono leading-none"
+                        style={{ color: s.accent }}
+                      >
+                        {s.val}
+                      </div>
+                      <div className="text-[10px] text-white/30 mt-0.5">
+                        {s.label}
+                      </div>
                     </div>
                   </div>
                 </GlowingStarsBackgroundCard>
@@ -205,8 +293,12 @@ function LoginPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "onLo
 
           {/* Heading */}
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-white tracking-tight">Welcome back</h1>
-            <p className="text-sm text-white/30 mt-1">Sign in to your FoodBridge account</p>
+            <h1 className="text-2xl font-bold text-white tracking-tight">
+              Welcome back
+            </h1>
+            <p className="text-sm text-white/30 mt-1">
+              Sign in to your FoodBridge account
+            </p>
           </div>
 
           {/* Demo role pills */}
@@ -216,7 +308,9 @@ function LoginPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "onLo
             transition={{ delay: 0.15 }}
             className="mb-6 p-4 rounded-2xl border border-white/[0.08] bg-white/[0.03]"
           >
-            <p className="text-[11px] text-white/30 font-medium uppercase tracking-wider mb-3">Demo — select a role</p>
+            <p className="text-[11px] text-white/30 font-medium uppercase tracking-wider mb-3">
+              Demo — select a role
+            </p>
             <div className="grid grid-cols-4 gap-2">
               {demoRoles.map((r) => (
                 <motion.button
@@ -225,13 +319,33 @@ function LoginPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "onLo
                   whileTap={{ scale: 0.94 }}
                   onClick={() => setLoginRole(r.id)}
                   className="flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-xl border transition-all duration-200"
-                  style={loginRole === r.id
-                    ? { borderColor: r.color + "50", background: r.color + "15", boxShadow: `0 0 12px ${r.color}25` }
-                    : { borderColor: "rgba(255,255,255,0.07)", background: "transparent" }
+                  style={
+                    loginRole === r.id
+                      ? {
+                          borderColor: r.color + "50",
+                          background: r.color + "15",
+                          boxShadow: `0 0 12px ${r.color}25`,
+                        }
+                      : {
+                          borderColor: "rgba(255,255,255,0.07)",
+                          background: "transparent",
+                        }
                   }
                 >
-                  <r.Icon size={15} style={{ color: loginRole === r.id ? r.color : "rgba(255,255,255,0.25)" }} />
-                  <span className="text-[10px] font-medium" style={{ color: loginRole === r.id ? r.color : "rgba(255,255,255,0.3)" }}>
+                  <r.Icon
+                    size={15}
+                    style={{
+                      color:
+                        loginRole === r.id ? r.color : "rgba(255,255,255,0.25)",
+                    }}
+                  />
+                  <span
+                    className="text-[10px] font-medium"
+                    style={{
+                      color:
+                        loginRole === r.id ? r.color : "rgba(255,255,255,0.3)",
+                    }}
+                  >
                     {r.label}
                   </span>
                 </motion.button>
@@ -278,7 +392,9 @@ function LoginPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "onLo
                 <input type="checkbox" className="rounded accent-emerald-500" />
                 Remember me
               </label>
-              <button className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">Forgot password?</button>
+              <button className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">
+                Forgot password?
+              </button>
             </div>
 
             <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
@@ -286,7 +402,14 @@ function LoginPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "onLo
                 onClick={() => onLogin(loginRole)}
                 className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-all duration-200 shadow-lg shadow-emerald-900/30"
               >
-                Sign in as {loginRole === "donor" ? "Donor" : loginRole === "ngo" ? "NGO" : loginRole === "volunteer" ? "Volunteer" : "Admin"}
+                Sign in as{" "}
+                {loginRole === "donor"
+                  ? "Donor"
+                  : loginRole === "ngo"
+                    ? "NGO"
+                    : loginRole === "volunteer"
+                      ? "Volunteer"
+                      : "Admin"}
                 <ArrowRight size={15} className="ml-1.5" />
               </Button>
             </motion.div>
@@ -294,7 +417,10 @@ function LoginPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "onLo
 
           <p className="text-xs text-white/25 text-center mt-7">
             Don&apos;t have an account?{" "}
-            <button onClick={() => onNavigate("register")} className="text-emerald-400 font-medium hover:text-emerald-300 transition-colors">
+            <button
+              onClick={() => onNavigate("register")}
+              className="text-emerald-400 font-medium hover:text-emerald-300 transition-colors"
+            >
               Create one
             </button>
           </p>
@@ -307,7 +433,10 @@ function LoginPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "onLo
 /* ═══════════════════════════════════════════════
    REGISTER
 ═══════════════════════════════════════════════ */
-function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "onLogin">) {
+function RegisterPage({
+  onNavigate,
+  onLogin,
+}: Pick<AuthProps, "onNavigate" | "onLogin">) {
   const [step, setStep] = useState(1);
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [showPwd, setShowPwd] = useState(false);
@@ -323,11 +452,16 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
 
       {/* Top bar */}
       <div className="relative z-10 flex items-center gap-4 px-6 py-4 border-b border-white/[0.06] bg-[#030303]/80 backdrop-blur-md">
-        <button onClick={() => onNavigate("landing")} className="flex items-center gap-2 shrink-0">
+        <button
+          onClick={() => onNavigate("landing")}
+          className="flex items-center gap-2 shrink-0"
+        >
           <div className="w-7 h-7 rounded-lg bg-emerald-600 flex items-center justify-center">
             <Leaf size={13} className="text-white" />
           </div>
-          <span className="font-semibold text-white text-sm tracking-tight">FoodBridge</span>
+          <span className="font-semibold text-white text-sm tracking-tight">
+            FoodBridge
+          </span>
         </button>
 
         {/* Progress bar */}
@@ -340,7 +474,9 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
             />
           </div>
         </div>
-        <span className="text-xs font-mono text-white/25 shrink-0">{step}/{totalSteps}</span>
+        <span className="text-xs font-mono text-white/25 shrink-0">
+          {step}/{totalSteps}
+        </span>
       </div>
 
       {/* Step tabs */}
@@ -353,20 +489,37 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
               return (
                 <div key={i} className="flex items-center gap-1.5">
                   <motion.div
-                    animate={done ? { backgroundColor: "#22c55e", borderColor: "#22c55e" } : active ? { borderColor: "#22c55e" } : {}}
+                    animate={
+                      done
+                        ? { backgroundColor: "#22c55e", borderColor: "#22c55e" }
+                        : active
+                          ? { borderColor: "#22c55e" }
+                          : {}
+                    }
                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-[10px] font-bold transition-colors ${
-                      done ? "border-emerald-500 bg-emerald-500 text-white"
-                      : active ? "border-emerald-500 text-emerald-400 bg-emerald-500/10"
-                      : "border-white/10 text-white/20"
+                      done
+                        ? "border-emerald-500 bg-emerald-500 text-white"
+                        : active
+                          ? "border-emerald-500 text-emerald-400 bg-emerald-500/10"
+                          : "border-white/10 text-white/20"
                     }`}
                   >
                     {done ? <Check size={10} /> : i + 1}
                   </motion.div>
-                  <span className={`text-[11px] font-medium hidden sm:block ${active ? "text-emerald-400" : done ? "text-white/40" : "text-white/15"}`}>
+                  <span
+                    className={`text-[11px] font-medium hidden sm:block ${active ? "text-emerald-400" : done ? "text-white/40" : "text-white/15"}`}
+                  >
                     {s}
                   </span>
                   {i < STEPS.length - 1 && (
-                    <div className="w-6 sm:w-10 h-px mx-1 hidden sm:block" style={{ background: done ? "#22c55e40" : "rgba(255,255,255,0.07)" }} />
+                    <div
+                      className="w-6 sm:w-10 h-px mx-1 hidden sm:block"
+                      style={{
+                        background: done
+                          ? "#22c55e40"
+                          : "rgba(255,255,255,0.07)",
+                      }}
+                    />
                   )}
                 </div>
               );
@@ -379,11 +532,13 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
       <div className="relative z-10 flex-1 flex items-start justify-center p-6 sm:p-10 overflow-y-auto">
         <div className="w-full max-w-2xl">
           <AnimatePresence mode="wait">
-
             {/* Step 1 — Role */}
             {step === 1 && (
-              <motion.div key="s1"
-                initial={{ opacity: 0, x: 28 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+              <motion.div
+                key="s1"
+                initial={{ opacity: 0, x: 28 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
               >
                 <StepHeader
@@ -411,23 +566,41 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
                           <div className="flex items-center gap-4">
                             <div
                               className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
-                              style={{ background: r.accent + "18", border: `1px solid ${r.accent}30` }}
+                              style={{
+                                background: r.accent + "18",
+                                border: `1px solid ${r.accent}30`,
+                              }}
                             >
                               <r.icon size={22} style={{ color: r.accent }} />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="font-semibold text-white mb-0.5">{r.title}</div>
-                              <div className="text-sm text-white/35 leading-snug">{r.desc}</div>
+                              <div className="font-semibold text-white mb-0.5">
+                                {r.title}
+                              </div>
+                              <div className="text-sm text-white/35 leading-snug">
+                                {r.desc}
+                              </div>
                             </div>
                             <div
                               className="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200"
-                              style={selectedRole === r.id
-                                ? { borderColor: r.accent, background: r.accent }
-                                : { borderColor: "rgba(255,255,255,0.15)" }
+                              style={
+                                selectedRole === r.id
+                                  ? {
+                                      borderColor: r.accent,
+                                      background: r.accent,
+                                    }
+                                  : { borderColor: "rgba(255,255,255,0.15)" }
                               }
                             >
                               {selectedRole === r.id && (
-                                <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 400 }}>
+                                <motion.span
+                                  initial={{ scale: 0 }}
+                                  animate={{ scale: 1 }}
+                                  transition={{
+                                    type: "spring",
+                                    stiffness: 400,
+                                  }}
+                                >
                                   <Check size={10} className="text-white" />
                                 </motion.span>
                               )}
@@ -438,7 +611,9 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
                             <motion.div
                               layoutId="roleAccent"
                               className="mt-4 h-px rounded-full"
-                              style={{ background: `linear-gradient(90deg, ${r.accent}60, transparent)` }}
+                              style={{
+                                background: `linear-gradient(90deg, ${r.accent}60, transparent)`,
+                              }}
                             />
                           )}
                         </motion.button>
@@ -451,8 +626,11 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
 
             {/* Step 2 — Account */}
             {step === 2 && (
-              <motion.div key="s2"
-                initial={{ opacity: 0, x: 28 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+              <motion.div
+                key="s2"
+                initial={{ opacity: 0, x: 28 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
               >
                 <StepHeader
@@ -471,7 +649,10 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
                       </Field>
                     </div>
                     <Field label="Email address" icon={<Mail size={11} />}>
-                      <DarkInput type="email" placeholder="sarah@organization.org" />
+                      <DarkInput
+                        type="email"
+                        placeholder="sarah@organization.org"
+                      />
                     </Field>
                     <Field label="Password" icon={<Lock size={11} />}>
                       <div className="relative">
@@ -489,14 +670,27 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
                       </div>
                     </Field>
                     <Field label="Confirm password" icon={<Lock size={11} />}>
-                      <DarkInput type="password" placeholder="Repeat your password" />
+                      <DarkInput
+                        type="password"
+                        placeholder="Repeat your password"
+                      />
                     </Field>
                     {/* Strength hint */}
                     <div className="flex gap-1.5 pt-1">
                       {["Weak", "Fair", "Strong"].map((level, i) => (
                         <div key={level} className="flex-1 space-y-1">
-                          <div className="h-0.5 rounded-full" style={{ background: i === 0 ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.06)" }} />
-                          <span className="text-[9px] text-white/15">{level}</span>
+                          <div
+                            className="h-0.5 rounded-full"
+                            style={{
+                              background:
+                                i === 0
+                                  ? "rgba(255,255,255,0.1)"
+                                  : "rgba(255,255,255,0.06)",
+                            }}
+                          />
+                          <span className="text-[9px] text-white/15">
+                            {level}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -507,8 +701,11 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
 
             {/* Step 3 — Organization */}
             {step === 3 && (
-              <motion.div key="s3"
-                initial={{ opacity: 0, x: 28 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+              <motion.div
+                key="s3"
+                initial={{ opacity: 0, x: 28 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
               >
                 <StepHeader
@@ -518,26 +715,43 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
                 />
                 <GlowCard className="mt-8" glowColor="rgba(34,197,94,0.15)">
                   <div className="p-6 space-y-4">
-                    <Field label="Organization name" icon={<Building2 size={11} />}>
+                    <Field
+                      label="Organization name"
+                      icon={<Building2 size={11} />}
+                    >
                       <DarkInput type="text" placeholder="Green Harvest Co." />
                     </Field>
-                    <Field label="Organization type" icon={<Building2 size={11} />}>
+                    <Field
+                      label="Organization type"
+                      icon={<Building2 size={11} />}
+                    >
                       <DarkSelect>
                         <option className="bg-[#1a1a1a]">Restaurant</option>
                         <option className="bg-[#1a1a1a]">Grocery store</option>
                         <option className="bg-[#1a1a1a]">Caterer</option>
-                        <option className="bg-[#1a1a1a]">Food manufacturer</option>
+                        <option className="bg-[#1a1a1a]">
+                          Food manufacturer
+                        </option>
                         <option className="bg-[#1a1a1a]">Event venue</option>
                       </DarkSelect>
                     </Field>
-                    <Field label="Registration number" icon={<ShieldCheck size={11} />}>
+                    <Field
+                      label="Registration number"
+                      icon={<ShieldCheck size={11} />}
+                    >
                       <DarkInput type="text" placeholder="BRN-2024-XXXXX" />
                     </Field>
                     <Field label="Contact phone" icon={<Phone size={11} />}>
                       <DarkInput type="tel" placeholder="+1 (555) 000-0000" />
                     </Field>
-                    <Field label="Website (optional)" icon={<Globe size={11} />}>
-                      <DarkInput type="url" placeholder="https://yourorganization.org" />
+                    <Field
+                      label="Website (optional)"
+                      icon={<Globe size={11} />}
+                    >
+                      <DarkInput
+                        type="url"
+                        placeholder="https://yourorganization.org"
+                      />
                     </Field>
                   </div>
                 </GlowCard>
@@ -546,8 +760,11 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
 
             {/* Step 4 — Location */}
             {step === 4 && (
-              <motion.div key="s4"
-                initial={{ opacity: 0, x: 28 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+              <motion.div
+                key="s4"
+                initial={{ opacity: 0, x: 28 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
               >
                 <StepHeader
@@ -574,15 +791,22 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
                       </Field>
                       <Field label="Country">
                         <DarkSelect>
-                          <option className="bg-[#1a1a1a]">United States</option>
+                          <option className="bg-[#1a1a1a]">
+                            United States
+                          </option>
                           <option className="bg-[#1a1a1a]">Canada</option>
-                          <option className="bg-[#1a1a1a]">United Kingdom</option>
+                          <option className="bg-[#1a1a1a]">
+                            United Kingdom
+                          </option>
                         </DarkSelect>
                       </Field>
                     </div>
                     <div className="flex items-center gap-2.5 p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06]">
                       <MapPin size={13} className="text-emerald-400 shrink-0" />
-                      <span className="text-xs text-emerald-300/70">Location is used to match you with nearby donors and NGOs</span>
+                      <span className="text-xs text-emerald-300/70">
+                        Location is used to match you with nearby donors and
+                        NGOs
+                      </span>
                     </div>
                   </div>
                 </GlowCard>
@@ -591,8 +815,11 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
 
             {/* Step 5 — Documents */}
             {step === 5 && (
-              <motion.div key="s5"
-                initial={{ opacity: 0, x: 28 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+              <motion.div
+                key="s5"
+                initial={{ opacity: 0, x: 28 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
               >
                 <StepHeader
@@ -602,7 +829,10 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
                 />
                 <div className="mt-8 space-y-4">
                   {[
-                    { label: "Business registration / license", required: true },
+                    {
+                      label: "Business registration / license",
+                      required: true,
+                    },
                     { label: "Food handler certificate", required: false },
                     { label: "Insurance certificate", required: false },
                   ].map((doc, i) => (
@@ -615,16 +845,25 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
                       <GlowCard glowColor="rgba(34,197,94,0.12)">
                         <div className="p-5 flex items-center gap-4 cursor-pointer group">
                           <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0 group-hover:border-emerald-500/30 transition-colors">
-                            <Upload size={16} className="text-white/30 group-hover:text-emerald-400 transition-colors" />
+                            <Upload
+                              size={16}
+                              className="text-white/30 group-hover:text-emerald-400 transition-colors"
+                            />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <p className="text-sm font-medium text-white/70">{doc.label}</p>
+                              <p className="text-sm font-medium text-white/70">
+                                {doc.label}
+                              </p>
                               {!doc.required && (
-                                <span className="text-[10px] text-white/20 border border-white/10 rounded px-1.5 py-0.5">Optional</span>
+                                <span className="text-[10px] text-white/20 border border-white/10 rounded px-1.5 py-0.5">
+                                  Optional
+                                </span>
                               )}
                             </div>
-                            <p className="text-xs text-white/20 mt-0.5">PDF, PNG, or JPG — max 10 MB</p>
+                            <p className="text-xs text-white/20 mt-0.5">
+                              PDF, PNG, or JPG — max 10 MB
+                            </p>
                           </div>
                           <Button
                             variant="outline"
@@ -643,8 +882,10 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
 
             {/* Step 6 — Success */}
             {step === 6 && (
-              <motion.div key="s6"
-                initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+              <motion.div
+                key="s6"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                 className="text-center py-12"
               >
@@ -653,7 +894,12 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
                   <motion.div
                     initial={{ scale: 0, rotate: -30 }}
                     animate={{ scale: 1, rotate: 0 }}
-                    transition={{ type: "spring", stiffness: 280, damping: 18, delay: 0.1 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 280,
+                      damping: 18,
+                      delay: 0.1,
+                    }}
                     className="w-24 h-24 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center"
                   >
                     <Check size={40} className="text-emerald-400" />
@@ -665,7 +911,12 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
                       className="absolute inset-0 rounded-full border border-emerald-500/20"
                       initial={{ scale: 1, opacity: 0.5 }}
                       animate={{ scale: 1.4 + ring * 0.3, opacity: 0 }}
-                      transition={{ duration: 1.5, delay: ring * 0.3, repeat: Infinity, ease: "easeOut" }}
+                      transition={{
+                        duration: 1.5,
+                        delay: ring * 0.3,
+                        repeat: Infinity,
+                        ease: "easeOut",
+                      }}
                     />
                   ))}
                 </div>
@@ -684,7 +935,9 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
                   transition={{ delay: 0.35 }}
                   className="text-white/40 max-w-md mx-auto mb-2 leading-relaxed"
                 >
-                  Your account has been created. Our team will review your verification documents and activate your account within 24–48 hours.
+                  Your account has been created. Our team will review your
+                  verification documents and activate your account within 24–48
+                  hours.
                 </motion.p>
                 <motion.p
                   initial={{ opacity: 0 }}
@@ -702,7 +955,11 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.5 }}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-full border mb-8 text-sm"
-                    style={{ borderColor: activeRole.accent + "40", background: activeRole.accent + "12", color: activeRole.accent }}
+                    style={{
+                      borderColor: activeRole.accent + "40",
+                      background: activeRole.accent + "12",
+                      color: activeRole.accent,
+                    }}
                   >
                     <activeRole.icon size={14} />
                     Joined as {activeRole.title}
@@ -714,18 +971,26 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.55 }}
                 >
-                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                  <motion.div
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                  >
                     <Button
-                      onClick={() => onLogin(selectedRole as "donor" | "ngo" | "volunteer" || "donor")}
+                      onClick={() =>
+                        onLogin(
+                          (selectedRole as "donor" | "ngo" | "volunteer") ||
+                            "donor",
+                        )
+                      }
                       className="h-12 px-8 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-base shadow-lg shadow-emerald-900/40 transition-all"
                     >
-                      Go to Dashboard <ArrowRight size={16} className="ml-1.5" />
+                      Go to Dashboard{" "}
+                      <ArrowRight size={16} className="ml-1.5" />
                     </Button>
                   </motion.div>
                 </motion.div>
               </motion.div>
             )}
-
           </AnimatePresence>
 
           {/* Nav buttons */}
@@ -739,7 +1004,9 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
               <motion.div whileHover={{ x: -2 }} whileTap={{ scale: 0.97 }}>
                 <Button
                   variant="outline"
-                  onClick={() => step > 1 ? setStep(step - 1) : onNavigate("landing")}
+                  onClick={() =>
+                    step > 1 ? setStep(step - 1) : onNavigate("landing")
+                  }
                   className="border-white/10 bg-transparent text-white/50 hover:bg-white/[0.05] hover:text-white/80 hover:border-white/20 rounded-xl"
                 >
                   <ArrowLeft size={14} className="mr-1.5" />
@@ -754,7 +1021,10 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
                 >
                   Save progress
                 </Button>
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                >
                   <Button
                     onClick={() => setStep(step + 1)}
                     disabled={step === 1 && !selectedRole}
@@ -773,14 +1043,28 @@ function RegisterPage({ onNavigate, onLogin }: Pick<AuthProps, "onNavigate" | "o
 }
 
 /* ── Step header ── */
-function StepHeader({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
+function StepHeader({
+  icon,
+  title,
+  desc,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+}) {
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+    >
       <div className="flex items-center gap-3 mb-2">
         <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
           {icon}
         </div>
-        <h2 className="text-2xl font-bold text-white tracking-tight">{title}</h2>
+        <h2 className="text-2xl font-bold text-white tracking-tight">
+          {title}
+        </h2>
       </div>
       <p className="text-white/35 text-sm ml-12">{desc}</p>
     </motion.div>
@@ -791,6 +1075,7 @@ function StepHeader({ icon, title, desc }: { icon: React.ReactNode; title: strin
    EXPORT
 ═══════════════════════════════════════════════ */
 export default function Auth({ mode, onNavigate, onLogin }: AuthProps) {
-  if (mode === "login") return <LoginPage onNavigate={onNavigate} onLogin={onLogin} />;
+  if (mode === "login")
+    return <LoginPage onNavigate={onNavigate} onLogin={onLogin} />;
   return <RegisterPage onNavigate={onNavigate} onLogin={onLogin} />;
 }

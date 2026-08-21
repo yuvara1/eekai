@@ -9,7 +9,6 @@ import {
 
 import React, { useRef, useState } from "react";
 
-
 interface NavbarProps {
   children: React.ReactNode;
   className?: string;
@@ -194,7 +193,6 @@ export const MobileNavMenu = ({
   children,
   className,
   isOpen,
-  onClose,
 }: MobileNavMenuProps) => {
   return (
     <AnimatePresence>
@@ -229,7 +227,6 @@ export const MobileNavToggle = ({
   );
 };
 
-
 export const NavbarButton = ({
   href,
   as: Tag = "a",
@@ -253,7 +250,8 @@ export const NavbarButton = ({
   const variantStyles = {
     primary:
       "shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]",
-    secondary: "bg-white/10 text-white border border-white/20 hover:bg-white/20 shadow-none",
+    secondary:
+      "bg-white/10 text-white border border-white/20 hover:bg-white/20 shadow-none",
     dark: "bg-emerald-500 text-white hover:bg-emerald-400 shadow-[0_0_20px_rgba(34,197,94,0.25)]",
     gradient:
       "bg-gradient-to-b from-blue-500 to-blue-700 text-white shadow-[0px_2px_0px_0px_rgba(255,255,255,0.3)_inset]",

@@ -1,7 +1,10 @@
-import { useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 
-export function AnimatedGridBackground({ className = "" }: { className?: string }) {
+export function AnimatedGridBackground({
+  className = "",
+}: {
+  className?: string;
+}) {
   return (
     <div className={`absolute inset-0 overflow-hidden ${className}`}>
       <div
@@ -17,7 +20,8 @@ export function AnimatedGridBackground({ className = "" }: { className?: string 
       <div
         className="absolute inset-0"
         style={{
-          background: "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(22,163,74,0.15), transparent)",
+          background:
+            "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(22,163,74,0.15), transparent)",
         }}
       />
     </div>
@@ -27,9 +31,19 @@ export function AnimatedGridBackground({ className = "" }: { className?: string 
 export function AnimatedDotGrid({ className = "" }: { className?: string }) {
   return (
     <div className={`absolute inset-0 overflow-hidden ${className}`}>
-      <svg className="absolute inset-0 w-full h-full opacity-30" xmlns="http://www.w3.org/2000/svg">
+      <svg
+        className="absolute inset-0 w-full h-full opacity-30"
+        xmlns="http://www.w3.org/2000/svg"
+      >
         <defs>
-          <pattern id="dot-grid" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
+          <pattern
+            id="dot-grid"
+            x="0"
+            y="0"
+            width="32"
+            height="32"
+            patternUnits="userSpaceOnUse"
+          >
             <circle cx="1" cy="1" r="1" fill="rgba(22,163,74,0.4)" />
           </pattern>
         </defs>
@@ -47,7 +61,8 @@ export function MovingBeams({ className = "" }: { className?: string }) {
           key={i}
           className="absolute h-px"
           style={{
-            background: "linear-gradient(90deg, transparent, rgba(22,163,74,0.6), transparent)",
+            background:
+              "linear-gradient(90deg, transparent, rgba(22,163,74,0.6), transparent)",
             top: `${20 + i * 20}%`,
             width: "100%",
           }}
@@ -65,7 +80,8 @@ export function MovingBeams({ className = "" }: { className?: string }) {
           key={`v-${i}`}
           className="absolute w-px"
           style={{
-            background: "linear-gradient(180deg, transparent, rgba(14,165,233,0.4), transparent)",
+            background:
+              "linear-gradient(180deg, transparent, rgba(14,165,233,0.4), transparent)",
             left: `${25 + i * 25}%`,
             height: "100%",
           }}
