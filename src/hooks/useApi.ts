@@ -5,11 +5,6 @@ export * from "@/services/analytics";
 export * from "@/services/admin";
 export * from "@/services/requirements";
 export type {
-  Donation,
-  Delivery,
-  Requirement,
-  NotificationItem,
-  DeliveryStats,
-  ImpactStats,
-  AdminOverview,
+  Donation, Delivery, Requirement,
+  NotificationItem, DeliveryStats, ImpactStats, AdminOverview,
 } from "@/types";

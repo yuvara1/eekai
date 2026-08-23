@@ -1,11 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import {
-  api,
-  isMock,
-  setTokens,
-  clearTokens,
-  getToken,
-} from "@/infrastructure/api/client";
+import { api, isMock, setTokens, clearTokens, getToken } from "@/infrastructure/api/client";
 import type { Role, AuthUser, RegisterPayload } from "@/types";
 
 interface AuthContextValue {
@@ -36,13 +30,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isMock) return;
     const token = getToken();
-    if (!token) {
-      setIsLoading(false);
-      return;
-    }
+    if (!token) { setIsLoading(false); return; }
 
-    api
-      .get<AuthUser>("/auth/me")
+    api.get<AuthUser>("/auth/me")
       .then((me) => {
         setUser(me);
         setRole(me.role);
@@ -58,11 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const loginWithCredentials = async (email: string, password: string) => {
-    const res = await api.post<AuthResponse>(
-      "/auth/login",
-      { email, password },
-      { public: true },
-    );
+    const res = await api.post<AuthResponse>("/auth/login", { email, password }, { public: true });
     setTokens(res.token, res.refreshToken);
     setUser(res.user);
     setRole(res.user.role);
@@ -70,9 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = async (payload: RegisterPayload) => {
-    const res = await api.post<AuthResponse>("/auth/register", payload, {
-      public: true,
-    });
+    const res = await api.post<AuthResponse>("/auth/register", payload, { public: true });
     setTokens(res.token, res.refreshToken);
     setUser(res.user);
     setRole(res.user.role);
@@ -81,11 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     if (!isMock) {
-      try {
-        await api.post("/auth/logout");
-      } catch {
-        /* best-effort */
-      }
+      try { await api.post("/auth/logout"); } catch { /* best-effort */ }
     }
     clearTokens();
     setUser(null);
@@ -93,18 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        role,
-        user,
-        isAuthenticated,
-        isLoading,
-        login,
-        loginWithCredentials,
-        register,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={{ role, user, isAuthenticated, isLoading, login, loginWithCredentials, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -28,7 +28,7 @@ export const PAGE_TO_PATH: Record<string, string> = {
 export const PATH_TO_PAGE: Record<string, string> = Object.fromEntries(
   Object.entries(PAGE_TO_PATH)
     .filter(([, v]) => v.startsWith("/app"))
-    .map(([k, v]) => [v, k]),
+    .map(([k, v]) => [v, k])
 );
 
 const MODAL_PAGES = new Set(["donation-details", "delivery-tracking"]);
