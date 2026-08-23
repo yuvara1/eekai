@@ -253,7 +253,116 @@ export default function RightPanel({ role, onNavigate }: RightPanelProps) {
           <Bell size={11} className="mr-1.5" /> View all notifications
         </Button>
 
+        {/* ── Impact animation ── */}
+        <FoodImpactScene />
+
       </div>
     </motion.aside>
+  );
+}
+
+function FoodImpactScene() {
+  return (
+    <div className="rounded-xl border border-border bg-muted/20 overflow-hidden p-3 pt-3.5">
+      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-2.5 px-0.5">Community Impact</p>
+
+      {/* SVG scene */}
+      <div className="relative w-full" style={{ height: 96 }}>
+        <svg viewBox="0 0 220 96" className="w-full h-full" style={{ overflow: "visible" }}>
+
+          {/* Ground line */}
+          <line x1="8" y1="82" x2="212" y2="82" stroke="var(--border)" strokeWidth="1.5" strokeLinecap="round" />
+
+          {/* ── Store / Donor building ── */}
+          <rect x="8" y="52" width="34" height="30" rx="2" fill="var(--muted)" stroke="var(--border)" strokeWidth="1" />
+          <rect x="17" y="62" width="8" height="10" rx="1" fill="var(--background)" />
+          <rect x="28" y="58" width="10" height="14" rx="1" fill="var(--background)" />
+          {/* Roof */}
+          <path d="M5 54 L25 40 L45 54" fill="var(--muted)" stroke="var(--border)" strokeWidth="1" strokeLinejoin="round" />
+          {/* Sign */}
+          <rect x="10" y="44" width="14" height="5" rx="1" fill="#16a34a" opacity="0.8" />
+
+          {/* ── People / Recipients ── */}
+          {/* Person 1 */}
+          <circle cx="188" cy="62" r="5" fill="var(--muted-foreground)" opacity="0.7" />
+          <path d="M183 82 Q188 68 193 82" fill="var(--muted-foreground)" opacity="0.7" />
+          {/* Person 2 */}
+          <circle cx="200" cy="64" r="4" fill="var(--muted-foreground)" opacity="0.5" />
+          <path d="M196 82 Q200 70 204 82" fill="var(--muted-foreground)" opacity="0.5" />
+          {/* Person 3 — child */}
+          <circle cx="210" cy="67" r="3" fill="var(--muted-foreground)" opacity="0.35" />
+          <path d="M207 82 Q210 72 213 82" fill="var(--muted-foreground)" opacity="0.35" />
+
+          {/* ── Animated truck ── */}
+          <motion.g
+            animate={{ x: [0, 130, 130, 0] }}
+            transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", times: [0, 0.45, 0.55, 1] }}
+          >
+            {/* Truck body */}
+            <rect x="50" y="64" width="30" height="18" rx="2" fill="#0ea5e9" opacity="0.85" />
+            {/* Cab */}
+            <rect x="78" y="68" width="14" height="14" rx="2" fill="#0284c7" opacity="0.9" />
+            {/* Window */}
+            <rect x="80" y="70" width="8" height="6" rx="1" fill="var(--background)" opacity="0.6" />
+            {/* Wheels */}
+            <motion.circle cx="60" cy="83" r="4" fill="var(--muted-foreground)" opacity="0.7"
+              animate={{ rotate: 360 }} transition={{ duration: 0.6, repeat: Infinity, ease: "linear" }} />
+            <motion.circle cx="84" cy="83" r="4" fill="var(--muted-foreground)" opacity="0.7"
+              animate={{ rotate: 360 }} transition={{ duration: 0.6, repeat: Infinity, ease: "linear" }} />
+            {/* Food box on truck */}
+            <rect x="54" y="57" width="12" height="9" rx="1.5" fill="#16a34a" opacity="0.9" />
+            <line x1="54" y1="61" x2="66" y2="61" stroke="white" strokeWidth="0.8" opacity="0.6" />
+            <line x1="60" y1="57" x2="60" y2="66" stroke="white" strokeWidth="0.8" opacity="0.6" />
+          </motion.g>
+
+          {/* ── Floating food particles emitted from store ── */}
+          {[0, 1, 2].map((i) => (
+            <motion.g key={i}
+              animate={{ x: [0, 18, 36], y: [0, -8, -4], opacity: [0, 1, 0] }}
+              transition={{ duration: 2.2, repeat: Infinity, delay: i * 0.7, ease: "easeOut" }}
+            >
+              <rect x={20 + i * 4} y={46} width="5" height="5" rx="1" fill="#16a34a" opacity="0.6" />
+            </motion.g>
+          ))}
+
+          {/* ── Heart delivered to people ── */}
+          <motion.g
+            animate={{ opacity: [0, 1, 1, 0], y: [0, -6, -10, -16], scale: [0.6, 1, 1, 0.7] }}
+            transition={{ duration: 3, repeat: Infinity, delay: 2.2, ease: "easeOut" }}
+            style={{ transformOrigin: "190px 50px" }}
+          >
+            <path d="M190 55 C190 52 186 49 184 52 C182 49 178 52 178 55 C178 60 184 64 184 64 C184 64 190 60 190 55Z"
+              fill="#f43f5e" opacity="0.8" transform="translate(3,0) scale(0.7)" />
+          </motion.g>
+
+          {/* ── Sparkles near recipients ── */}
+          {[0, 1].map((i) => (
+            <motion.circle key={i} cx={175 + i * 12} cy={52 + i * 6} r="1.5"
+              fill="#f59e0b"
+              animate={{ scale: [0, 1.5, 0], opacity: [0, 1, 0] }}
+              transition={{ duration: 1.4, repeat: Infinity, delay: 2.4 + i * 0.5, ease: "easeOut" }}
+            />
+          ))}
+        </svg>
+      </div>
+
+      {/* Stats strip */}
+      <div className="flex items-center justify-between mt-2.5 px-0.5">
+        {[
+          { val: "284K", label: "kg rescued" },
+          { val: "48K",  label: "meals" },
+          { val: "96%",  label: "delivered" },
+        ].map((s, i) => (
+          <motion.div key={i}
+            initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 + i * 0.1 }}
+            className="text-center"
+          >
+            <p className="text-[11px] font-bold text-foreground leading-none">{s.val}</p>
+            <p className="text-[9px] text-muted-foreground mt-0.5">{s.label}</p>
+          </motion.div>
+        ))}
+      </div>
+    </div>
   );
 }
