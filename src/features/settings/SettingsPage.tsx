@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Building2, Bell, ShieldCheck, Sliders, Settings as SettingsIcon, ChevronRight } from "lucide-react";
+import { User, Building2, Bell, ShieldCheck, Sliders, Settings as SettingsIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,117 +17,60 @@ const navItems = [
 
 export default function SettingsPage() {
   const [active, setActive] = useState("profile");
-  const [mobileOpen, setMobileOpen] = useState(false);
-
-  const activeItem = navItems.find(n => n.value === active)!;
 
   return (
     <div className="p-3 sm:p-6 max-w-full overflow-x-hidden">
       <motion.h1 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-        className="text-2xl font-semibold tracking-tight text-foreground mb-6">
+        className="text-2xl font-semibold tracking-tight text-foreground mb-5">
         Settings
       </motion.h1>
 
-      <div className="flex flex-col md:flex-row gap-6 items-start">
-
-        {/* ── Sidebar (desktop) ── */}
-        <motion.aside
-          initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 }}
-          className="hidden md:flex flex-col w-56 shrink-0 rounded-2xl border border-border bg-card overflow-hidden"
-        >
-          {navItems.map((item, i) => {
-            const Icon = item.icon;
-            const isActive = active === item.value;
-            return (
-              <button
-                key={item.value}
-                onClick={() => setActive(item.value)}
-                className={`relative flex items-center gap-3 px-4 py-3.5 text-left transition-colors group ${
-                  i !== navItems.length - 1 ? "border-b border-border/50" : ""
-                } ${isActive ? "bg-primary/8" : "hover:bg-muted/60"}`}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId="settings-sidebar-pill"
-                    className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-primary"
-                  />
-                )}
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                  isActive ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground group-hover:bg-muted/80"
-                }`}>
-                  <Icon size={15} />
-                </div>
-                <div className="min-w-0">
-                  <div className={`text-sm font-medium leading-tight ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
-                    {item.label}
-                  </div>
-                  <div className="text-[11px] text-muted-foreground/70 leading-tight mt-0.5 truncate">{item.desc}</div>
-                </div>
-              </button>
-            );
-          })}
-        </motion.aside>
-
-        {/* ── Mobile nav selector ── */}
-        <div className="md:hidden w-full">
-          <button
-            onClick={() => setMobileOpen(v => !v)}
-            className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-border bg-card text-sm font-medium"
-          >
-            <div className="flex items-center gap-2.5">
-              {React.createElement(activeItem.icon, { size: 15, className: "text-primary" })}
-              <span>{activeItem.label}</span>
-            </div>
-            <ChevronRight size={15} className={`text-muted-foreground transition-transform ${mobileOpen ? "rotate-90" : ""}`} />
-          </button>
-
-          <AnimatePresence>
-            {mobileOpen && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden mt-1 rounded-xl border border-border bg-card"
-              >
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = active === item.value;
-                  return (
-                    <button
-                      key={item.value}
-                      onClick={() => { setActive(item.value); setMobileOpen(false); }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-border/50 last:border-0 transition-colors ${
-                        isActive ? "bg-primary/8 text-foreground" : "text-muted-foreground hover:bg-muted/50"
-                      }`}
-                    >
-                      <Icon size={14} />
-                      <span className="text-sm font-medium">{item.label}</span>
-                      {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
-                    </button>
-                  );
-                })}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* ── Content panel ── */}
-        <div className="flex-1 min-w-0 w-full">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={active}
-              initial={{ opacity: 0, y: 10, filter: "blur(3px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -6, filter: "blur(3px)" }}
-              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+      {/* ── Horizontal tab bar ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+        className="flex items-center gap-1 border-b border-border mb-6 overflow-x-auto"
+        style={{ scrollbarWidth: "none" }}
+      >
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = active === item.value;
+          return (
+            <button
+              key={item.value}
+              onClick={() => setActive(item.value)}
+              className={`relative flex items-center gap-2 px-3.5 py-2.5 text-sm font-medium whitespace-nowrap transition-colors shrink-0 ${
+                isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
             >
-              {active === "profile"       && <ProfileTab />}
-              {active === "notifications" && <NotificationsTab />}
-              {(active === "organization" || active === "security" || active === "preferences") && (
-                <PlaceholderTab tab={active} />
+              <Icon size={14} />
+              {item.label}
+              {isActive && (
+                <motion.div
+                  layoutId="settings-tab-indicator"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full"
+                />
               )}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </div>
+            </button>
+          );
+        })}
+      </motion.div>
+
+      {/* ── Content panel ── */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={active}
+          initial={{ opacity: 0, y: 8, filter: "blur(3px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          exit={{ opacity: 0, y: -6, filter: "blur(3px)" }}
+          transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+        >
+          {active === "profile"       && <ProfileTab />}
+          {active === "notifications" && <NotificationsTab />}
+          {(active === "organization" || active === "security" || active === "preferences") && (
+            <PlaceholderTab tab={active} />
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
