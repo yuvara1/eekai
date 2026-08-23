@@ -1,3 +1,4 @@
+import React from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, Package, Truck, Handshake, Bell, ArrowRight, TrendingUp, Zap, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
