@@ -1,6 +1,5 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, Package, Truck, Handshake, Bell, ArrowRight, TrendingUp, Zap, Calendar, ChevronDown, ChevronUp } from "lucide-react";
+import { motion } from "framer-motion";
+import { CheckCircle2, Package, Truck, Handshake, Bell, ArrowRight, TrendingUp, Zap, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
@@ -80,48 +79,11 @@ const upcomingItems: Record<Role, { label: string; sub: string; time: string }[]
   ],
 };
 
-function SectionToggle({
-  label,
-  open,
-  onToggle,
-  children,
-  extra,
-}: {
-  label: string;
-  open: boolean;
-  onToggle: () => void;
-  children: React.ReactNode;
-  extra?: React.ReactNode;
-}) {
+function SectionLabel({ label, extra }: { label: string; extra?: React.ReactNode }) {
   return (
-    <div>
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-between px-1 mb-1.5 group"
-      >
-        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-          {label}
-        </p>
-        <div className="flex items-center gap-1">
-          {extra}
-          {open
-            ? <ChevronUp size={11} className="text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />
-            : <ChevronDown size={11} className="text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />}
-        </div>
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            style={{ overflow: "hidden" }}
-          >
-            {children}
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div className="flex items-center justify-between px-1 mb-1.5">
+      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
+      {extra}
     </div>
   );
 }
@@ -130,10 +92,6 @@ export default function RightPanel({ role, onNavigate }: RightPanelProps) {
   const actions = quickActions[role];
   const activity = recentActivity[role];
   const upcoming = upcomingItems[role];
-
-  const [showActions, setShowActions] = useState(false);
-  const [showUpcoming, setShowUpcoming] = useState(false);
-  const [showActivity, setShowActivity] = useState(false);
 
   return (
     <motion.aside
@@ -144,9 +102,10 @@ export default function RightPanel({ role, onNavigate }: RightPanelProps) {
     >
       <div className="p-4 space-y-3">
 
-        {/* Quick Actions — collapsed by default */}
-        <SectionToggle label="Quick Actions" open={showActions} onToggle={() => setShowActions(v => !v)}>
-          <div className="space-y-1 pb-1">
+        {/* Quick Actions */}
+        <div>
+          <SectionLabel label="Quick Actions" />
+          <div className="space-y-1">
             {actions.map((a, i) => {
               const Icon = a.icon;
               return (
@@ -166,13 +125,14 @@ export default function RightPanel({ role, onNavigate }: RightPanelProps) {
               );
             })}
           </div>
-        </SectionToggle>
+        </div>
 
         <Separator />
 
-        {/* Upcoming — collapsed by default */}
-        <SectionToggle label="Upcoming" open={showUpcoming} onToggle={() => setShowUpcoming(v => !v)}>
-          <div className="space-y-2 pb-1">
+        {/* Upcoming */}
+        <div>
+          <SectionLabel label="Upcoming" />
+          <div className="space-y-2">
             {upcoming.map((u, i) => (
               <div key={i} className="flex items-start gap-2 px-2.5 py-2 rounded-lg bg-muted/50">
                 <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
@@ -186,26 +146,19 @@ export default function RightPanel({ role, onNavigate }: RightPanelProps) {
               </div>
             ))}
           </div>
-        </SectionToggle>
+        </div>
 
         <Separator />
 
-        {/* Activity — collapsed by default */}
-        <SectionToggle
-          label="Activity"
-          open={showActivity}
-          onToggle={() => setShowActivity(v => !v)}
-          extra={
-            <motion.button
-              whileHover={{ x: 1 }}
-              onClick={(e) => { e.stopPropagation(); onNavigate("notifications"); }}
-              className="text-[10px] text-primary font-semibold hover:opacity-80 flex items-center gap-0.5 mr-1"
-            >
+        {/* Activity */}
+        <div>
+          <SectionLabel label="Activity" extra={
+            <motion.button whileHover={{ x: 1 }} onClick={() => onNavigate("notifications")}
+              className="text-[10px] text-primary font-semibold hover:opacity-80 flex items-center gap-0.5">
               All <ArrowRight size={9} />
             </motion.button>
-          }
-        >
-          <div className="space-y-1 pb-1">
+          } />
+          <div className="space-y-1">
             {activity.map((a, i) => {
               const Icon = a.icon;
               return (
@@ -221,7 +174,7 @@ export default function RightPanel({ role, onNavigate }: RightPanelProps) {
               );
             })}
           </div>
-        </SectionToggle>
+        </div>
 
         <Separator />
 
