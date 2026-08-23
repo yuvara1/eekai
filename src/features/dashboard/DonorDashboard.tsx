@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import { useNav } from "@/hooks/useNav";
 import { motion, useInView } from "framer-motion";
 import {
@@ -74,7 +74,10 @@ function Section({ children, delay = 0, className = "" }: { children: React.Reac
 export default function DonorDashboard() {
   const navigate = useNav();
   const { isDark } = useTheme();
-  const pieData = pieBase.map((d, i) => ({ ...d, color: isDark ? PIE_DARK[i] : PIE_LIGHT[i] }));
+  const pieData = useMemo(
+    () => pieBase.map((d, i) => ({ ...d, color: isDark ? PIE_DARK[i] : PIE_LIGHT[i] })),
+    [isDark],
+  );
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
