@@ -6,6 +6,7 @@ import {
   PieChart, Pie, Cell,
 } from "recharts";
 import { Package, TrendingUp, CheckCircle, Truck, Plus, ArrowRight, Clock, Calendar, UtensilsCrossed, Leaf, Sparkles } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 import { AnimatedCounter } from "@/components/ui/TextEffects";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -20,12 +21,14 @@ const areaData = [
   { month: "Aug", kg: 1840 },
 ];
 
-const pieData = [
-  { name: "Delivered",  value: 62, color: "#000000" },
-  { name: "In transit", value: 14, color: "#3F3F46" },
-  { name: "Matched",    value: 10, color: "#71717A" },
-  { name: "Published",  value: 8,  color: "#A1A1AA" },
-  { name: "Expired",    value: 6,  color: "#D4D4D8" },
+const PIE_LIGHT = ["#000000", "#3F3F46", "#71717A", "#A1A1AA", "#D4D4D8"];
+const PIE_DARK  = ["#ffffff", "rgba(255,255,255,0.65)", "rgba(255,255,255,0.42)", "rgba(255,255,255,0.25)", "rgba(255,255,255,0.13)"];
+const pieBase = [
+  { name: "Delivered",  value: 62 },
+  { name: "In transit", value: 14 },
+  { name: "Matched",    value: 10 },
+  { name: "Published",  value: 8  },
+  { name: "Expired",    value: 6  },
 ];
 
 const recentDonations = [
@@ -70,6 +73,8 @@ function Section({ children, delay = 0, className = "" }: { children: React.Reac
 
 export default function DonorDashboard() {
   const navigate = useNav();
+  const { isDark } = useTheme();
+  const pieData = pieBase.map((d, i) => ({ ...d, color: isDark ? PIE_DARK[i] : PIE_LIGHT[i] }));
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
