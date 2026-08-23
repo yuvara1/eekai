@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, CheckCircle2, Package, Truck, Handshake, Bell, ArrowRight, TrendingUp, Zap, Calendar, ChevronDown, ChevronUp } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
@@ -225,18 +224,16 @@ export default function RightPanel({ role, onNavigate }: RightPanelProps) {
         <Separator />
 
         {/* Platform Status — always visible */}
-        <Card className="border-border shadow-none">
-          <CardHeader className="pb-2 pt-3 px-3">
-            <CardTitle className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
-              <motion.div
-                className="w-1.5 h-1.5 rounded-full bg-emerald-500"
-                animate={{ opacity: [1, 0.4, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-              Platform Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3 space-y-1.5">
+        <div className="rounded-xl border border-border bg-muted/30 p-3">
+          <div className="flex items-center gap-1.5 mb-2.5">
+            <motion.div
+              className="w-1.5 h-1.5 rounded-full bg-emerald-500"
+              animate={{ opacity: [1, 0.4, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            <p className="text-[11px] font-bold text-foreground">Platform Status</p>
+          </div>
+          <div className="space-y-2">
             {[
               { label: "Matching engine", val: "Online" },
               { label: "Notifications", val: "Online" },
@@ -244,11 +241,11 @@ export default function RightPanel({ role, onNavigate }: RightPanelProps) {
             ].map((s, i) => (
               <div key={i} className="flex items-center justify-between">
                 <span className="text-[10px] text-muted-foreground">{s.label}</span>
-                <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">{s.val}</span>
+                <span className="text-[10px] font-semibold text-emerald-500">{s.val}</span>
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         <Button variant="outline" size="sm" className="w-full text-xs h-8" onClick={() => onNavigate("notifications")}>
           <Bell size={11} className="mr-1.5" /> View all notifications
