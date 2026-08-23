@@ -9,6 +9,7 @@ import { AnimatedCounter } from "../components/ui/TextEffects";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface DonorDashboardProps {
   onNavigate: (page: string) => void;
@@ -23,12 +24,14 @@ const areaData = [
   { month: "Aug", kg: 1840 },
 ];
 
-const pieData = [
-  { name: "Delivered", value: 62, color: "#16a34a" },
-  { name: "In transit", value: 14, color: "#0ea5e9" },
-  { name: "Matched", value: 10, color: "#8b5cf6" },
-  { name: "Published", value: 8, color: "#f59e0b" },
-  { name: "Expired", value: 6, color: "#f43f5e" },
+const PIE_LIGHT = ["#16a34a", "#0ea5e9", "#8b5cf6", "#f59e0b", "#f43f5e"];
+const PIE_DARK  = ["#ffffff", "rgba(255,255,255,0.65)", "rgba(255,255,255,0.42)", "rgba(255,255,255,0.25)", "rgba(255,255,255,0.13)"];
+const pieBase = [
+  { name: "Delivered",  value: 62 },
+  { name: "In transit", value: 14 },
+  { name: "Matched",    value: 10 },
+  { name: "Published",  value: 8  },
+  { name: "Expired",    value: 6  },
 ];
 
 const recentDonations = [
@@ -72,6 +75,8 @@ function Section({ children, delay = 0, className = "" }: { children: React.Reac
 }
 
 export default function DonorDashboard({ onNavigate }: DonorDashboardProps) {
+  const { isDark } = useTheme();
+  const pieData = pieBase.map((d, i) => ({ ...d, color: isDark ? PIE_DARK[i] : PIE_LIGHT[i] }));
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
