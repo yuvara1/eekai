@@ -1,5 +1,6 @@
-import { motion } from "framer-motion";
-import { Clock, CheckCircle2, Package, Truck, Handshake, Bell, ArrowRight, TrendingUp, Zap, Calendar } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Clock, CheckCircle2, Package, Truck, Handshake, Bell, ArrowRight, TrendingUp, Zap, Calendar, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -80,10 +81,58 @@ const upcomingItems: Record<Role, { label: string; sub: string; time: string }[]
   ],
 };
 
+function SectionToggle({
+  label,
+  open,
+  onToggle,
+  children,
+  extra,
+}: {
+  label: string;
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+  extra?: React.ReactNode;
+}) {
+  return (
+    <div>
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-1 mb-1.5 group"
+      >
+        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
+        <div className="flex items-center gap-1">
+          {extra}
+          {open
+            ? <ChevronUp size={11} className="text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />
+            : <ChevronDown size={11} className="text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />}
+        </div>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            style={{ overflow: "hidden" }}
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function RightPanel({ role, onNavigate }: RightPanelProps) {
   const actions = quickActions[role];
   const activity = recentActivity[role];
   const upcoming = upcomingItems[role];
+
+  const [showActions, setShowActions] = useState(false);
+  const [showUpcoming, setShowUpcoming] = useState(false);
+  const [showActivity, setShowActivity] = useState(false);
 
   return (
     <motion.aside
@@ -92,12 +141,11 @@ export default function RightPanel({ role, onNavigate }: RightPanelProps) {
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       className="hidden xl:flex flex-col w-64 shrink-0 border-l border-border bg-card overflow-y-auto"
     >
-      <div className="p-4 space-y-4">
+      <div className="p-4 space-y-3">
 
-        {/* Quick Actions */}
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-2 px-1">Quick Actions</p>
-          <div className="space-y-1">
+        {/* Quick Actions — collapsed by default */}
+        <SectionToggle label="Quick Actions" open={showActions} onToggle={() => setShowActions(v => !v)}>
+          <div className="space-y-1 mb-1">
             {actions.map((a, i) => {
               const Icon = a.icon;
               return (
@@ -111,23 +159,21 @@ export default function RightPanel({ role, onNavigate }: RightPanelProps) {
                   <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0" style={{ background: `${a.accent}18` }}>
                     <Icon size={12} style={{ color: a.accent }} />
                   </div>
-                  <span className="text-xs font-medium text-foreground group-hover:text-foreground">{a.label}</span>
+                  <span className="text-xs font-medium text-foreground">{a.label}</span>
                   <ArrowRight size={10} className="ml-auto text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </motion.button>
               );
             })}
           </div>
-        </div>
+        </SectionToggle>
 
         <Separator />
 
-        {/* Upcoming */}
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-2 px-1">Upcoming</p>
-          <div className="space-y-2">
+        {/* Upcoming — collapsed by default */}
+        <SectionToggle label="Upcoming" open={showUpcoming} onToggle={() => setShowUpcoming(v => !v)}>
+          <div className="space-y-2 mb-1">
             {upcoming.map((u, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.06 }}
-                className="flex items-start gap-2 px-2.5 py-2 rounded-lg bg-muted/50">
+              <div key={i} className="flex items-start gap-2 px-2.5 py-2 rounded-lg bg-muted/50">
                 <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                   <Calendar size={10} className="text-primary" />
                 </div>
@@ -136,27 +182,33 @@ export default function RightPanel({ role, onNavigate }: RightPanelProps) {
                   <p className="text-[10px] text-muted-foreground truncate">{u.sub}</p>
                 </div>
                 <span className="text-[10px] text-muted-foreground whitespace-nowrap shrink-0 font-medium">{u.time}</span>
-              </motion.div>
+              </div>
             ))}
           </div>
-        </div>
+        </SectionToggle>
 
         <Separator />
 
-        {/* Recent Activity */}
-        <div>
-          <div className="flex items-center justify-between mb-2 px-1">
-            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Activity</p>
-            <motion.button whileHover={{ x: 1 }} onClick={() => onNavigate("notifications")} className="text-[10px] text-primary font-semibold hover:opacity-80 flex items-center gap-0.5">
+        {/* Activity — collapsed by default */}
+        <SectionToggle
+          label="Activity"
+          open={showActivity}
+          onToggle={() => setShowActivity(v => !v)}
+          extra={
+            <motion.button
+              whileHover={{ x: 1 }}
+              onClick={(e) => { e.stopPropagation(); onNavigate("notifications"); }}
+              className="text-[10px] text-primary font-semibold hover:opacity-80 flex items-center gap-0.5 mr-1"
+            >
               All <ArrowRight size={9} />
             </motion.button>
-          </div>
-          <div className="space-y-1">
+          }
+        >
+          <div className="space-y-1 mb-1">
             {activity.map((a, i) => {
               const Icon = a.icon;
               return (
-                <motion.div key={i} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 + i * 0.05 }}
-                  className="flex items-start gap-2 px-2.5 py-1.5 rounded-lg hover:bg-muted/50 transition-colors cursor-default">
+                <div key={i} className="flex items-start gap-2 px-2.5 py-1.5 rounded-lg hover:bg-muted/50 transition-colors cursor-default">
                   <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: `${a.color}15` }}>
                     <Icon size={10} style={{ color: a.color }} />
                   </div>
@@ -164,19 +216,23 @@ export default function RightPanel({ role, onNavigate }: RightPanelProps) {
                     <p className="text-[11px] text-foreground leading-snug">{a.text}</p>
                     <p className="text-[10px] text-muted-foreground">{a.time}</p>
                   </div>
-                </motion.div>
+                </div>
               );
             })}
           </div>
-        </div>
+        </SectionToggle>
 
         <Separator />
 
-        {/* Platform status */}
+        {/* Platform Status — always visible */}
         <Card className="border-border shadow-none">
           <CardHeader className="pb-2 pt-3 px-3">
             <CardTitle className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
-              <motion.div className="w-1.5 h-1.5 rounded-full bg-emerald-500" animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 2, repeat: Infinity }} />
+              <motion.div
+                className="w-1.5 h-1.5 rounded-full bg-emerald-500"
+                animate={{ opacity: [1, 0.4, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
               Platform Status
             </CardTitle>
           </CardHeader>
