@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNav } from "@/hooks/useNav";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, Clock, MapPin, Truck, Phone, MessageSquare, Camera, PartyPopper, Star } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton, SkeletonStatCard, SkeletonListItem } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 
 
 type Phase = "pickup" | "in_transit" | "delivered";
@@ -28,6 +30,8 @@ export default function DeliveryTracking() {
   const navigate = useNav();
   const [currentPhase] = useState<Phase>("in_transit");
   const [completed, setCompleted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 1600); return () => clearTimeout(t); }, []);
 
   if (completed) {
     return (
@@ -87,13 +91,31 @@ export default function DeliveryTracking() {
         </motion.div>
       </motion.div>
 
+      {/* Mini-stat row */}
+      
+      {loading && (
+        <div className="flex items-center gap-2 px-1 py-2 text-xs text-muted-foreground">
+          <Spinner className="size-3 text-muted-foreground" />
+          <span>Loading…</span>
+        </div>
+      )}
+      {loading && (
+        <div className="grid grid-cols-3 gap-3">
+          <SkeletonStatCard />
+          <SkeletonStatCard />
+          <SkeletonStatCard />
+        </div>
+      )}
+
       {/* Main content */}
       <div className="grid lg:grid-cols-5 gap-5">
         {/* Map */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="lg:col-span-3 space-y-4">
-          <Card className="overflow-hidden">
+          {loading ? (
+            <Skeleton className="h-64 w-full rounded-xl" />
+          ) : <Card className="overflow-hidden">
             <div className="map-placeholder h-56 sm:h-80 relative">
               <div className="map-grid" />
               {/* Roads */}
@@ -182,7 +204,7 @@ export default function DeliveryTracking() {
                 );
               })}
             </div>
-          </Card>
+          </Card>}
         </motion.div>
 
         {/* Right panel */}
@@ -219,18 +241,24 @@ export default function DeliveryTracking() {
                   </motion.div>
                 </div>
                 <Separator />
-                <div className="space-y-1.5">
-                  {[
-                    { label: "Food", val: "Assorted Produce · 48 kg" },
-                    { label: "Pickup confirmed", val: "2:10 PM" },
-                    { label: "Recipient", val: "Maria Santos" },
-                  ].map((row, i) => (
-                    <div key={i} className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">{row.label}</span>
-                      <span className="font-medium text-foreground">{row.val}</span>
-                    </div>
-                  ))}
-                </div>
+                {loading ? (
+                  <div className="space-y-2">
+                    {Array.from({ length: 5 }).map((_, i) => <SkeletonListItem key={i} />)}
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    {[
+                      { label: "Food", val: "Assorted Produce · 48 kg" },
+                      { label: "Pickup confirmed", val: "2:10 PM" },
+                      { label: "Recipient", val: "Maria Santos" },
+                    ].map((row, i) => (
+                      <div key={i} className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">{row.label}</span>
+                        <span className="font-medium text-foreground">{row.val}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>

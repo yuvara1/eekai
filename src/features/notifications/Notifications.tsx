@@ -1,10 +1,12 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, Zap, Truck, CheckCircle2, PartyPopper, Clock, ShieldCheck, XCircle, Camera, Settings, CheckCheck, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton, SkeletonAvatar } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 
 type NotifIcon = "zap" | "truck" | "check" | "party" | "clock" | "shield" | "x" | "camera";
 
@@ -123,6 +125,9 @@ const POPOVER_H = 210;
 const OFFSET = 14;
 
 export default function Notifications() {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 1300); return () => clearTimeout(t); }, []);
+
   const [activeCat, setActiveCat] = useState("all");
   const [notifs, setNotifs] = useState(allNotifs);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
@@ -203,6 +208,26 @@ export default function Notifications() {
 
         {/* Scrollable list */}
         <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+          
+      {loading && (
+        <div className="flex items-center gap-2 px-1 py-2 text-xs text-muted-foreground">
+          <Spinner className="size-3 text-muted-foreground" />
+          <span>Loading…</span>
+        </div>
+      )}
+      {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-2">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="flex items-start gap-3 p-3.5 rounded-xl border border-border bg-card">
+                  <SkeletonAvatar />
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
           <AnimatePresence mode="popLayout">
             {filtered.length === 0 ? (
               <motion.div key="empty" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
@@ -278,6 +303,7 @@ export default function Notifications() {
               </div>
             )}
           </AnimatePresence>
+          )}
         </div>
       </div>
 

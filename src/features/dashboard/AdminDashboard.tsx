@@ -1,13 +1,15 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useNav } from "@/hooks/useNav";
 import { motion, useInView } from "framer-motion";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, RadialBarChart, RadialBar } from "recharts";
 import { Users, Building2, Package, Truck, ShieldCheck, Search, Filter, CheckCircle, XCircle, AlertCircle, ArrowRight, Handshake, Settings2, Leaf, TrendingUp } from "lucide-react";
 import { AnimatedCounter } from "@/components/ui/TextEffects";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { SkeletonStatCard, SkeletonChartCard, SkeletonTableRow } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 
 const MotionCard = motion.create(Card);
 const MotionTableRow = motion.create(TableRow);
@@ -53,11 +55,33 @@ function Section({ children, delay = 0 }: { children: React.ReactNode; delay?: n
   );
 }
 
+const sparkUsers = [{ v: 2680 }, { v: 2714 }, { v: 2751 }, { v: 2783 }, { v: 2809 }, { v: 2847 }];
+const sparkDonations = [{ v: 44 }, { v: 58 }, { v: 49 }, { v: 71 }, { v: 55 }, { v: 61 }];
+
 const topStats = [
-  { label: "Total Users",          val: 2847, sub: "+38 this week",       icon: <Users size={18} />,    gradient: "stat-gradient-sky" },
-  { label: "Active Organizations", val: 284,  sub: "138 NGOs · 146 Donors",icon: <Building2 size={18} />,gradient: "stat-gradient-violet" },
-  { label: "Active Donations",     val: 61,   sub: "3 expiring soon",     icon: <Package size={18} />,  gradient: "stat-gradient-amber" },
-  { label: "Active Deliveries",    val: 14,   sub: "2 delayed",           icon: <Truck size={18} />,    gradient: "stat-gradient-rose" },
+  {
+    label: "Total Users", val: 2847, sub: "+38 this week",
+    icon: <Users size={18} />, gradient: "stat-gradient-sky",
+    viz: "area", data: sparkUsers,
+  },
+  {
+    label: "Active Organizations", val: 284, sub: "138 NGOs · 146 Donors",
+    icon: <Building2 size={18} />, gradient: "stat-gradient-violet",
+    viz: "split", segments: [
+      { label: "NGOs", count: 138, pct: 49 },
+      { label: "Donors", count: 146, pct: 51 },
+    ],
+  },
+  {
+    label: "Active Donations", val: 61, sub: "3 expiring soon",
+    icon: <Package size={18} />, gradient: "stat-gradient-amber",
+    viz: "spark", data: sparkDonations,
+  },
+  {
+    label: "Active Deliveries", val: 14, sub: "2 delayed",
+    icon: <Truck size={18} />, gradient: "stat-gradient-rose",
+    viz: "status", ok: 12, warn: 2,
+  },
 ];
 
 const verificationIcons: Record<string, React.ElementType> = {
@@ -68,6 +92,8 @@ const verificationIcons: Record<string, React.ElementType> = {
 
 export default function AdminDashboard() {
   const navigate = useNav();
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 1400); return () => clearTimeout(t); }, []);
   return (
     <div className="space-y-0">
       {/* ── Hero banner ── */}
@@ -119,48 +145,241 @@ export default function AdminDashboard() {
 
       <div className="p-6 space-y-6">
         {/* Overview stats */}
+        
+      {loading && (
+        <div className="flex items-center gap-2 px-1 py-2 text-xs text-muted-foreground">
+          <Spinner className="size-3 text-muted-foreground" />
+          <span>Loading…</span>
+        </div>
+      )}
+      {loading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)}
+          </div>
+        ) : (
         <motion.div className="grid grid-cols-2 lg:grid-cols-4 gap-4" initial="hidden" animate="visible"
           variants={{ visible: { transition: { staggerChildren: 0.08 } } }}>
           {topStats.map((s, i) => (
             <motion.div
               key={i}
-              variants={{ hidden: { opacity: 0, y: 24, scale: 0.94 }, visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } } }}
+              variants={{ hidden: { opacity: 0, y: 24, scale: 0.94 }, visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const } } }}
               whileHover={{ y: -4, boxShadow: "0 16px 40px rgba(0,0,0,0.18)" }}
-              className={`${s.gradient} rounded-xl p-4 text-white shadow-sm cursor-default`}
+              className={`${s.gradient} rounded-xl p-4 text-white shadow-sm cursor-default flex flex-col`}
             >
-              <div className="flex items-center justify-between mb-3">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-2">
                 <span className="text-white/70">{s.icon}</span>
+                <span className="text-white/50 text-[10px] font-mono">{s.sub}</span>
               </div>
-              <div className="text-2xl font-semibold tracking-tight text-white mb-0.5">
+
+              {/* Value */}
+              <div className="text-2xl font-bold tracking-tight text-white leading-none">
                 <AnimatedCounter target={s.val} />
               </div>
-              <div className="text-white/80 text-xs">{s.label}</div>
-              <div className="text-white/60 text-[10px] mt-1">{s.sub}</div>
+              <div className="text-white/75 text-xs mt-0.5 mb-2">{s.label}</div>
+
+              {/* Viz */}
+              {s.viz === "area" && s.data && (
+                <div className="mt-auto h-10">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={s.data} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
+                      <defs>
+                        <linearGradient id={`ag${i}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="rgba(255,255,255,0.35)" />
+                          <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+                        </linearGradient>
+                      </defs>
+                      <Area type="monotone" dataKey="v" stroke="rgba(255,255,255,0.85)" strokeWidth={2} fill={`url(#ag${i})`} dot={false} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              {s.viz === "spark" && s.data && (
+                <div className="mt-auto h-10">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={s.data} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
+                      <Line type="monotone" dataKey="v" stroke="rgba(255,255,255,0.85)" strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              {s.viz === "split" && s.segments && (
+                <div className="mt-auto space-y-1.5">
+                  {/* stacked proportion bar */}
+                  <div className="flex h-1.5 rounded-full overflow-hidden gap-0.5">
+                    {s.segments.map((seg, j) => (
+                      <motion.div
+                        key={j}
+                        className="h-full rounded-full"
+                        style={{ background: j === 0 ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.4)" }}
+                        initial={{ flex: 0 }}
+                        animate={{ flex: seg.pct }}
+                        transition={{ duration: 0.8, delay: i * 0.08 + j * 0.1, ease: "easeOut" }}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex justify-between">
+                    {s.segments.map((seg, j) => (
+                      <div key={j} className="flex items-center gap-1">
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: j === 0 ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.4)" }} />
+                        <span className="text-white/70 text-[10px]">{seg.count} {seg.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {s.viz === "status" && (
+                <div className="mt-auto space-y-1.5">
+                  <div className="flex gap-1">
+                    {[...Array(s.ok! + s.warn!)].map((_, j) => (
+                      <motion.div
+                        key={j}
+                        className={`h-1.5 flex-1 rounded-full ${j < s.ok! ? "bg-white/80" : "bg-white/30"}`}
+                        initial={{ scaleX: 0 }}
+                        animate={{ scaleX: 1 }}
+                        transition={{ delay: i * 0.08 + j * 0.04, duration: 0.3, ease: "easeOut" }}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/65 text-[10px]">{s.ok} on track</span>
+                    <div className="flex items-center gap-1">
+                      <motion.div className="w-1.5 h-1.5 rounded-full bg-white/90" animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.2, repeat: Infinity }} />
+                      <span className="text-white/65 text-[10px]">{s.warn} delayed</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </motion.div>
           ))}
         </motion.div>
+        )}
 
         {/* Platform metrics */}
+        {loading ? (
+          <div className="grid grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, i) => <SkeletonChartCard key={i} />)}
+          </div>
+        ) : (
         <motion.div className="grid grid-cols-3 gap-4" initial="hidden" animate="visible"
           variants={{ visible: { transition: { staggerChildren: 0.07 } } }}>
-          {[
-            { label: "Platform Food Rescued", val: "284,500 kg", sub: "+12% this month" },
-            { label: "Matching Success Rate", val: "91.4%",      sub: "+2.1% vs last month" },
-            { label: "Avg. Matching Time",    val: "48 min",     sub: "−6 min vs last month" },
-          ].map((s, i) => (
-            <MotionCard
-              key={i}
-              variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
-              whileHover={{ y: -2, boxShadow: "0 8px 24px rgba(0,0,0,0.08)" }}
-            >
-              <CardContent className="p-4">
-                <div className="text-sm text-muted-foreground mb-1">{s.label}</div>
-                <div className="text-xl font-semibold tracking-tight text-foreground">{s.val}</div>
-                <div className="text-xs text-muted-foreground mt-0.5">{s.sub}</div>
-              </CardContent>
-            </MotionCard>
-          ))}
+
+          {/* Food Rescued — monthly area trend */}
+          <MotionCard
+            variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
+            whileHover={{ y: -2, boxShadow: "0 8px 24px rgba(0,0,0,0.08)" }}
+          >
+            <CardContent className="p-4">
+              <div className="text-xs text-muted-foreground mb-1">Platform Food Rescued</div>
+              <div className="text-xl font-bold tracking-tight text-foreground">284,500 kg</div>
+              <div className="flex items-center gap-1 mb-3">
+                <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">↑ +12%</span>
+                <span className="text-[10px] text-muted-foreground">this month</span>
+              </div>
+              <div className="h-16">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={[{m:"Mar",v:18200},{m:"Apr",v:22800},{m:"May",v:19600},{m:"Jun",v:28400},{m:"Jul",v:34100},{m:"Aug",v:38200}]} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
+                    <defs>
+                      <linearGradient id="rfg" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--foreground)" stopOpacity={0.15} />
+                        <stop offset="100%" stopColor="var(--foreground)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="m" tick={{ fontSize: 9, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+                    <Area type="monotone" dataKey="v" stroke="var(--foreground)" strokeWidth={2} fill="url(#rfg)" dot={false} />
+                    <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: "1px solid var(--border)", background: "var(--card)", color: "var(--foreground)" }} formatter={(v: number) => [`${(v/1000).toFixed(1)}K kg`]} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </MotionCard>
+
+          {/* Matching Success Rate — radial arc + bar */}
+          <MotionCard
+            variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
+            whileHover={{ y: -2, boxShadow: "0 8px 24px rgba(0,0,0,0.08)" }}
+          >
+            <CardContent className="p-4 flex flex-col">
+              <div className="text-xs text-muted-foreground mb-1">Matching Success Rate</div>
+              <div className="flex items-center gap-3 mt-1">
+                <div className="w-16 h-16 shrink-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadialBarChart innerRadius="62%" outerRadius="100%" startAngle={90} endAngle={90 - 360 * 0.914} data={[{ value: 91.4 }]}>
+                      <RadialBar dataKey="value" fill="var(--foreground)" background={{ fill: "var(--muted)" }} cornerRadius={4} />
+                    </RadialBarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex-1">
+                  <div className="text-2xl font-bold tracking-tight text-foreground">91.4%</div>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">↑ +2.1%</span>
+                    <span className="text-[10px] text-muted-foreground">vs last month</span>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 space-y-1.5">
+                {[{ label: "Matched", pct: 91 }, { label: "Unmatched", pct: 9 }].map((r, j) => (
+                  <div key={j} className="flex items-center gap-2">
+                    <span className="text-[10px] text-muted-foreground w-16 shrink-0">{r.label}</span>
+                    <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                      <motion.div className="h-full rounded-full bg-foreground" initial={{ width: 0 }} animate={{ width: `${r.pct}%` }} transition={{ duration: 0.9, delay: 0.2 + j * 0.1, ease: "easeOut" }} />
+                    </div>
+                    <span className="text-[10px] font-semibold text-foreground w-6 text-right">{r.pct}%</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </MotionCard>
+
+          {/* Avg. Matching Time — gauge bar + trend dots */}
+          <MotionCard
+            variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
+            whileHover={{ y: -2, boxShadow: "0 8px 24px rgba(0,0,0,0.08)" }}
+          >
+            <CardContent className="p-4">
+              <div className="text-xs text-muted-foreground mb-1">Avg. Matching Time</div>
+              <div className="text-2xl font-bold tracking-tight text-foreground">48 min</div>
+              <div className="flex items-center gap-1 mb-3">
+                <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">↓ −6 min</span>
+                <span className="text-[10px] text-muted-foreground">vs last month</span>
+              </div>
+              {/* Speed gauge: 0 = fast (good), 120 = slow. 48/120 = 40% */}
+              <div className="space-y-1 mb-3">
+                <div className="flex justify-between text-[9px] text-muted-foreground">
+                  <span>Fast</span><span>Slow</span>
+                </div>
+                <div className="h-2 rounded-full bg-muted overflow-hidden relative">
+                  <motion.div
+                    className="h-full rounded-full"
+                    style={{ background: "linear-gradient(to right, var(--foreground) 0%, color-mix(in srgb, var(--foreground) 50%, transparent) 100%)" }}
+                    initial={{ width: 0 }}
+                    animate={{ width: "40%" }}
+                    transition={{ duration: 1, delay: 0.15, ease: "easeOut" }}
+                  />
+                </div>
+              </div>
+              {/* Weekly trend dots */}
+              <div className="flex items-end gap-1 h-8">
+                {[54, 61, 58, 52, 49, 48].map((v, j) => (
+                  <motion.div
+                    key={j}
+                    className="flex-1 rounded-sm bg-foreground/70"
+                    style={{ height: `${(v / 61) * 100}%` }}
+                    initial={{ scaleY: 0 }}
+                    animate={{ scaleY: 1 }}
+                    transition={{ delay: 0.1 + j * 0.06, duration: 0.4, ease: "easeOut" }}
+                  />
+                ))}
+              </div>
+              <div className="text-[9px] text-muted-foreground mt-1 text-center">6-week trend (min)</div>
+            </CardContent>
+          </MotionCard>
+
         </motion.div>
+        )}
 
         {/* Chart */}
         <Section delay={0.05}>
@@ -284,7 +503,14 @@ export default function AdminDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((u, i) => (
+                  {loading
+                    ? Array.from({ length: 5 }).map((_, i) => (
+                        <SkeletonTableRow key={i} columns={[
+                          { w: "w-32" }, { w: "w-36" }, { w: "w-20", pill: true },
+                          { w: "w-16", pill: true }, { w: "w-20" }, { w: "w-24" }, { w: "w-16" },
+                        ]} />
+                      ))
+                    : users.map((u, i) => (
                     <MotionTableRow key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 + i * 0.06 }}>
                       <TableCell>
                         <div className="flex items-center gap-2">

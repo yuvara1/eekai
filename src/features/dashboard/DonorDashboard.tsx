@@ -1,15 +1,19 @@
-import { useRef } from "react";
+import { useRef, useMemo, useState, useEffect } from "react";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useNav } from "@/hooks/useNav";
 import { motion, useInView } from "framer-motion";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell,
+  PieChart, Pie, Cell, LineChart, Line, RadialBarChart, RadialBar,
 } from "recharts";
 import { Package, TrendingUp, CheckCircle, Truck, Plus, ArrowRight, Clock, Calendar, UtensilsCrossed, Leaf, Sparkles } from "lucide-react";
 import { AnimatedCounter } from "@/components/ui/TextEffects";
+import { SkeletonStatCard, SkeletonChartCard, SkeletonTableRow, SkeletonRowItem } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Spinner } from "@/components/ui/spinner";
 
 const areaData = [
   { month: "Mar", kg: 820 },
@@ -20,12 +24,14 @@ const areaData = [
   { month: "Aug", kg: 1840 },
 ];
 
-const pieData = [
-  { name: "Delivered",  value: 62, color: "#000000" },
-  { name: "In transit", value: 14, color: "#3F3F46" },
-  { name: "Matched",    value: 10, color: "#71717A" },
-  { name: "Published",  value: 8,  color: "#A1A1AA" },
-  { name: "Expired",    value: 6,  color: "#D4D4D8" },
+const PIE_LIGHT = ["#000000", "#3F3F46", "#71717A", "#A1A1AA", "#D4D4D8"];
+const PIE_DARK  = ["#ffffff", "rgba(255,255,255,0.62)", "rgba(255,255,255,0.38)", "rgba(255,255,255,0.22)", "rgba(255,255,255,0.12)"];
+const pieBase = [
+  { name: "Delivered",  value: 62 },
+  { name: "In transit", value: 14 },
+  { name: "Matched",    value: 10 },
+  { name: "Published",  value: 8  },
+  { name: "Expired",    value: 6  },
 ];
 
 const recentDonations = [
@@ -41,12 +47,22 @@ const upcomingPickups = [
   { id: "DON-2026-000121", food: "Prepared Meals", time: "Tomorrow, 6:00 PM", ngo: "Pending match", address: "123 Main St" },
 ];
 
+const sparkDonations = [
+  { v: 88 }, { v: 95 }, { v: 102 }, { v: 108 }, { v: 116 }, { v: 124 },
+];
+const sparkFood = [
+  { v: 820 }, { v: 1240 }, { v: 980 }, { v: 1560 }, { v: 2100 }, { v: 1840 },
+];
+const sparkMeals = [
+  { v: 9200 }, { v: 10400 }, { v: 11100 }, { v: 12500 }, { v: 13800 }, { v: 14280 },
+];
+
 const stats = [
-  { label: "Total Donations",   val: 124,   icon: Package,        gradient: "stat-gradient-green", delta: "+8 this month" },
-  { label: "Food Rescued",      val: 8400,  icon: TrendingUp,     gradient: "stat-gradient-sky",   delta: "+1.2K this month" },
-  { label: "Success Rate",      val: 87, suffix: "%", icon: CheckCircle, gradient: "stat-gradient-violet", delta: "+2% vs last month" },
-  { label: "Meals Distributed", val: 14280, icon: UtensilsCrossed,gradient: "stat-gradient-amber", delta: "+2K this month" },
-  { label: "Active Now",        val: 3,     icon: Truck,          gradient: "stat-gradient-rose",  delta: "2 in transit" },
+  { label: "Total Donations",   val: 124,   icon: Package,         gradient: "stat-gradient-green",  delta: "+8 this month",      viz: "spark",  data: sparkDonations },
+  { label: "Food Rescued",      val: 8400,  icon: TrendingUp,      gradient: "stat-gradient-sky",    delta: "+1.2K this month",   viz: "area",   data: sparkFood,     suffix: " kg" },
+  { label: "Success Rate",      val: 87,    suffix: "%", icon: CheckCircle,  gradient: "stat-gradient-violet", delta: "+2% vs last month",  viz: "radial" },
+  { label: "Meals Distributed", val: 14280, icon: UtensilsCrossed, gradient: "stat-gradient-amber",  delta: "+2K this month",     viz: "spark",  data: sparkMeals },
+  { label: "Active Now",        val: 3,     icon: Truck,           gradient: "stat-gradient-rose",   delta: "2 in transit",       viz: "pulse" },
 ];
 
 const cardVariants = {
@@ -70,6 +86,13 @@ function Section({ children, delay = 0, className = "" }: { children: React.Reac
 
 export default function DonorDashboard() {
   const navigate = useNav();
+  const { isDark } = useTheme();
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 1400); return () => clearTimeout(t); }, []);
+  const pieData = useMemo(
+    () => pieBase.map((d, i) => ({ ...d, color: isDark ? PIE_DARK[i] : PIE_LIGHT[i] })),
+    [isDark],
+  );
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
@@ -138,7 +161,19 @@ export default function DonorDashboard() {
 
       <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
         {/* Top stats */}
-        <motion.div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4" initial="hidden" animate="visible">
+        
+      {loading && (
+        <div className="flex items-center gap-2 px-1 py-2 text-xs text-muted-foreground">
+          <Spinner className="size-3 text-muted-foreground" />
+          <span>Loading…</span>
+        </div>
+      )}
+      {loading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+            {Array.from({ length: 5 }).map((_, i) => <SkeletonStatCard key={i} />)}
+          </div>
+        ) : null}
+        {!loading && <motion.div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4" initial="hidden" animate="visible">
           {stats.map((s, i) => {
             const Icon = s.icon;
             return (
@@ -147,88 +182,166 @@ export default function DonorDashboard() {
                 custom={i}
                 variants={cardVariants}
                 whileHover={{ y: -4, boxShadow: "0 16px 40px rgba(0,0,0,0.18)" }}
-                className={`${s.gradient} rounded-xl p-4 text-white shadow-sm cursor-default${i === 4 ? " col-span-2 lg:col-span-1" : ""}`}
+                className={`${s.gradient} rounded-xl p-4 text-white shadow-sm cursor-default flex flex-col${i === 4 ? " col-span-2 lg:col-span-1" : ""}`}
               >
-                <div className="flex items-center justify-between mb-3">
+                {/* Header row */}
+                <div className="flex items-center justify-between mb-2">
                   <div className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center">
                     <Icon size={14} className="text-white" />
                   </div>
-                  <span className="text-white/50 text-[10px] font-mono">{s.delta}</span>
+                  <span className="text-white/55 text-[10px] font-mono leading-tight text-right">{s.delta}</span>
                 </div>
-                <div className="font-bold text-2xl mb-0.5 leading-none tracking-tight">
+
+                {/* Value */}
+                <div className="font-bold text-2xl leading-none tracking-tight">
                   <AnimatedCounter target={s.val} suffix={s.suffix ?? ""} />
                 </div>
-                <div className="text-white/75 text-xs mt-0.5">{s.label}</div>
+                <div className="text-white/70 text-xs mt-0.5 mb-2">{s.label}</div>
+
+                {/* Visualization */}
+                {s.viz === "spark" && s.data && (
+                  <div className="mt-auto h-10">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={s.data} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
+                        <Line type="monotone" dataKey="v" stroke="rgba(255,255,255,0.8)" strokeWidth={2} dot={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+
+                {s.viz === "area" && s.data && (
+                  <div className="mt-auto h-10">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={s.data} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
+                        <defs>
+                          <linearGradient id={`sg${i}`} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="rgba(255,255,255,0.35)" />
+                            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+                          </linearGradient>
+                        </defs>
+                        <Area type="monotone" dataKey="v" stroke="rgba(255,255,255,0.85)" strokeWidth={2} fill={`url(#sg${i})`} dot={false} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+
+                {s.viz === "radial" && (
+                  <div className="mt-auto flex items-center gap-2">
+                    <div className="h-10 w-10 shrink-0">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RadialBarChart innerRadius="62%" outerRadius="100%" startAngle={90} endAngle={90 - 360 * (s.val / 100)} data={[{ value: s.val }]}>
+                          <RadialBar dataKey="value" fill="rgba(255,255,255,0.9)" background={{ fill: "rgba(255,255,255,0.15)" }} cornerRadius={4} />
+                        </RadialBarChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex-1">
+                      <div className="h-1.5 rounded-full bg-white/20 overflow-hidden">
+                        <motion.div
+                          className="h-full rounded-full bg-white/80"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${s.val}%` }}
+                          transition={{ duration: 1, delay: i * 0.08, ease: "easeOut" }}
+                        />
+                      </div>
+                      <p className="text-white/55 text-[10px] mt-1">{s.val}% success</p>
+                    </div>
+                  </div>
+                )}
+
+                {s.viz === "pulse" && (
+                  <div className="mt-auto flex items-center gap-1.5">
+                    {[...Array(5)].map((_, j) => (
+                      <motion.div
+                        key={j}
+                        className={`h-1.5 flex-1 rounded-full ${j < s.val ? "bg-white/85" : "bg-white/20"}`}
+                        initial={{ scaleX: 0 }}
+                        animate={{ scaleX: 1 }}
+                        transition={{ delay: i * 0.08 + j * 0.06, duration: 0.4, ease: "easeOut" }}
+                      />
+                    ))}
+                    <motion.div
+                      className="w-2 h-2 rounded-full bg-white shrink-0"
+                      animate={{ opacity: [1, 0.3, 1] }}
+                      transition={{ duration: 1.4, repeat: Infinity }}
+                    />
+                  </div>
+                )}
               </motion.div>
             );
           })}
-        </motion.div>
+        </motion.div>}
 
-        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
+        <ResizablePanelGroup direction="horizontal" className="!h-auto rounded-none gap-0">
           {/* Activity chart */}
-          <Section delay={0.05} className="lg:col-span-2">
-            <Card>
-              <CardHeader className="flex-row items-start justify-between space-y-0 pb-4">
-                <div>
-                  <CardTitle className="text-lg font-semibold tracking-tight">Donation Activity</CardTitle>
-                  <CardDescription className="mt-0.5">Food rescued (kg) — last 6 months</CardDescription>
-                </div>
-                <select className="fb-input w-auto text-xs py-1.5 px-2">
-                  <option>Last 6 months</option>
-                  <option>Last year</option>
-                </select>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={200}>
-                  <AreaChart data={areaData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="monoGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--foreground)" stopOpacity={0.15} />
-                        <stop offset="95%" stopColor="var(--foreground)" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid var(--border)", background: "var(--card)", color: "var(--foreground)" }} formatter={(v) => [`${v} kg`, "Food rescued"]} />
-                    <Area type="monotone" dataKey="kg" stroke="var(--foreground)" strokeWidth={2.5} fill="url(#monoGrad)" dot={{ r: 3, fill: "var(--foreground)" }} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Section>
+          <ResizablePanel defaultSize="65" minSize="40" maxSize="80">
+            <Section delay={0.05} className="pr-3">
+              <Card>
+                <CardHeader className="flex-row items-start justify-between space-y-0 pb-4">
+                  <div>
+                    <CardTitle className="text-lg font-semibold tracking-tight">Donation Activity</CardTitle>
+                    <CardDescription className="mt-0.5">Food rescued (kg) — last 6 months</CardDescription>
+                  </div>
+                  <select className="fb-input w-auto text-xs py-1.5 px-2">
+                    <option>Last 6 months</option>
+                    <option>Last year</option>
+                  </select>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <AreaChart data={areaData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="monoGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="var(--foreground)" stopOpacity={0.15} />
+                          <stop offset="95%" stopColor="var(--foreground)" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                      <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+                      <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid var(--border)", background: "var(--card)", color: "var(--foreground)" }} formatter={(v) => [`${v} kg`, "Food rescued"]} />
+                      <Area type="monotone" dataKey="kg" stroke="var(--foreground)" strokeWidth={2.5} fill="url(#monoGrad)" dot={{ r: 3, fill: "var(--foreground)" }} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </Section>
+          </ResizablePanel>
+
+          <ResizableHandle withHandle />
 
           {/* Status distribution */}
-          <Section delay={0.1}>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-semibold tracking-tight">Status Distribution</CardTitle>
-                <CardDescription>All-time donation statuses</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={160}>
-                  <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} dataKey="value" strokeWidth={0}>
-                      {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
-                    </Pie>
-                    <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: "1px solid var(--border)", background: "var(--card)", color: "var(--foreground)" }} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="space-y-2 mt-2">
-                  {pieData.map((d, i) => (
-                    <motion.div key={i} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 + i * 0.06 }} className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full" style={{ background: d.color }} />
-                        <span className="text-muted-foreground">{d.name}</span>
-                      </div>
-                      <span className="font-mono-data font-medium text-foreground">{d.value}%</span>
-                    </motion.div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </Section>
-        </div>
+          <ResizablePanel defaultSize="35" minSize="20" maxSize="60">
+            <Section delay={0.1} className="pl-3">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg font-semibold tracking-tight">Status Distribution</CardTitle>
+                  <CardDescription>All-time donation statuses</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={160}>
+                    <PieChart>
+                      <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} dataKey="value" strokeWidth={0}>
+                        {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
+                      </Pie>
+                      <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: "1px solid var(--border)", background: "var(--card)", color: "var(--foreground)" }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="space-y-2 mt-2">
+                    {pieData.map((d, i) => (
+                      <motion.div key={i} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 + i * 0.06 }} className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full" style={{ background: d.color }} />
+                          <span className="text-muted-foreground">{d.name}</span>
+                        </div>
+                        <span className="font-mono-data font-medium text-foreground">{d.value}%</span>
+                      </motion.div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </Section>
+          </ResizablePanel>
+        </ResizablePanelGroup>
 
         {/* Upcoming pickups */}
         <Section delay={0.1}>
@@ -293,6 +406,15 @@ export default function DonorDashboard() {
 
         {/* Recent donations table */}
         <Section delay={0.15}>
+          {loading ? (
+            <div className="rounded-xl border border-border bg-card p-5 space-y-2">
+              <div className="flex items-center justify-between mb-4">
+                <div className="h-5 w-36 animate-pulse rounded-md bg-muted/60" />
+                <div className="h-4 w-16 animate-pulse rounded-md bg-muted/60" />
+              </div>
+              {Array.from({ length: 5 }).map((_, i) => <SkeletonRowItem key={i} />)}
+            </div>
+          ) : (
           <Card className="overflow-hidden">
             <CardHeader className="flex-row items-center justify-between space-y-0 border-b border-border">
               <CardTitle className="text-lg font-semibold tracking-tight">Recent Donations</CardTitle>
@@ -341,6 +463,7 @@ export default function DonorDashboard() {
               </div>
             </CardContent>
           </Card>
+          )}
         </Section>
       </div>
     </div>

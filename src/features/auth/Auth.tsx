@@ -9,6 +9,7 @@ import {
   Wheat, UtensilsCrossed, Users, Zap, BarChart3, Recycle,
   FileText, Award, TrendingUp,
 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -115,6 +116,29 @@ function Chip({ label, active, onClick, accent = "#22c55e" }: { label: string; a
 /* ═══════════════════════════════════════════════
    LOGIN
 ═══════════════════════════════════════════════ */
+function SocialButton({
+  onClick, loading, children, className = "",
+}: { onClick: () => void; loading?: boolean; children: React.ReactNode; className?: string }) {
+  return (
+    <motion.button
+      whileHover={{ scale: 1.015, backgroundColor: "rgba(255,255,255,0.07)" }}
+      whileTap={{ scale: 0.975 }}
+      onClick={onClick}
+      disabled={loading}
+      className={`relative w-full h-12 rounded-xl border border-white/[0.1] bg-white/[0.04] flex items-center justify-center gap-3 text-sm font-medium text-white/80 transition-colors overflow-hidden ${className}`}
+    >
+      {loading && (
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.04] to-transparent"
+          animate={{ x: ["-100%", "100%"] }}
+          transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
+        />
+      )}
+      {children}
+    </motion.button>
+  );
+}
+
 function LoginPage() {
   const navigate = useNav();
   const { login } = useAuth();
@@ -122,6 +146,10 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginRole, setLoginRole] = useState<"donor" | "ngo" | "volunteer" | "admin">("donor");
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [fbLoading, setFbLoading] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [pwdFocused, setPwdFocused] = useState(false);
 
   const demoRoles = [
     { id: "donor" as const, label: "Donor", Icon: Package, color: "#22c55e" },
@@ -130,6 +158,13 @@ function LoginPage() {
     { id: "admin" as const, label: "Admin", Icon: Settings2, color: "#a78bfa" },
   ];
 
+  const activeRole = demoRoles.find(r => r.id === loginRole)!;
+
+  function handleSocialLogin(provider: "google" | "facebook") {
+    if (provider === "google") { setGoogleLoading(true); setTimeout(() => { setGoogleLoading(false); login(loginRole); navigate(`${loginRole}-dashboard`); }, 1200); }
+    else { setFbLoading(true); setTimeout(() => { setFbLoading(false); login(loginRole); navigate(`${loginRole}-dashboard`); }, 1200); }
+  }
+
   return (
     <div className="min-h-screen bg-[#030303] flex overflow-hidden">
 
@@ -137,19 +172,13 @@ function LoginPage() {
       <div className="hidden lg:flex w-[480px] xl:w-[540px] shrink-0 relative flex-col overflow-hidden border-r border-white/[0.05]">
         <AnimatedGridBackground />
         <Spotlight className="-top-20 -left-10" fill="rgba(34,197,94,0.4)" />
-
-        {/* Particle network fills lower half */}
         <div className="absolute inset-0 opacity-60">
           <ParticleNetwork className="w-full h-full" />
         </div>
-
-        {/* Gradient vignette */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#030303]/80 via-transparent to-[#030303]/60 pointer-events-none" />
         <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-[#030303] to-transparent pointer-events-none" />
 
-        {/* Content */}
         <div className="relative z-10 flex flex-col h-full p-10">
-          {/* Logo */}
           <button onClick={() => navigate("landing")} className="flex items-center gap-2.5 w-fit">
             <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-900/50">
               <Leaf size={15} className="text-white" />
@@ -157,10 +186,8 @@ function LoginPage() {
             <span className="font-semibold text-white tracking-tight">FoodBridge</span>
           </button>
 
-          {/* Headline */}
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             className="mt-auto mb-8"
           >
@@ -178,10 +205,8 @@ function LoginPage() {
             </p>
           </motion.div>
 
-          {/* Stats */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.6 }}
             className="grid grid-cols-2 gap-3"
           >
@@ -191,12 +216,7 @@ function LoginPage() {
               { val: "138", label: "NGO Partners", accent: "#a78bfa", Icon: Handshake },
               { val: "512", label: "Volunteers", accent: "#f59e0b", Icon: Users },
             ].map((s, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.45 + i * 0.06 }}
-              >
+              <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 + i * 0.06 }}>
                 <GlowingStarsBackgroundCard className="rounded-xl border-white/[0.06] bg-white/[0.03] p-0">
                   <div className="px-4 py-3 flex items-center gap-3">
                     <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: s.accent + "18" }}>
@@ -215,116 +235,192 @@ function LoginPage() {
       </div>
 
       {/* ── Right form panel ── */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-10">
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-10 overflow-y-auto">
         <motion.div
-          initial={{ opacity: 0, x: 24 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-[400px]"
+          className="w-full max-w-[400px] py-4"
         >
           {/* Back */}
-          <motion.button
-            whileHover={{ x: -2 }}
-            onClick={() => navigate("landing")}
-            className="flex items-center gap-1.5 text-xs text-white/30 hover:text-white/60 mb-8 transition-colors"
-          >
+          <motion.button whileHover={{ x: -2 }} onClick={() => navigate("landing")}
+            className="flex items-center gap-1.5 text-xs text-white/30 hover:text-white/60 mb-8 transition-colors">
             <ArrowLeft size={13} /> Back to home
           </motion.button>
 
           {/* Heading */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold text-white tracking-tight">Welcome back</h1>
-            <p className="text-sm text-white/30 mt-1">Sign in to your FoodBridge account</p>
-          </div>
-
-          {/* Demo role pills */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="mb-6 p-4 rounded-2xl border border-white/[0.08] bg-white/[0.03]"
-          >
-            <p className="text-[11px] text-white/30 font-medium uppercase tracking-wider mb-3">Demo — select a role</p>
-            <div className="grid grid-cols-4 gap-2">
-              {demoRoles.map((r) => (
-                <motion.button
-                  key={r.id}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.94 }}
-                  onClick={() => setLoginRole(r.id)}
-                  className="flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-xl border transition-all duration-200"
-                  style={loginRole === r.id
-                    ? { borderColor: r.color + "50", background: r.color + "15", boxShadow: `0 0 12px ${r.color}25` }
-                    : { borderColor: "rgba(255,255,255,0.07)", background: "transparent" }
-                  }
-                >
-                  <r.Icon size={15} style={{ color: loginRole === r.id ? r.color : "rgba(255,255,255,0.25)" }} />
-                  <span className="text-[10px] font-medium" style={{ color: loginRole === r.id ? r.color : "rgba(255,255,255,0.3)" }}>
-                    {r.label}
-                  </span>
-                </motion.button>
-              ))}
-            </div>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="mb-7">
+            <h1 className="text-[28px] font-bold text-white tracking-tight leading-tight">Welcome back</h1>
+            <p className="text-sm text-white/35 mt-1.5">Sign in to your FoodBridge account</p>
           </motion.div>
 
-          {/* Form */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.22 }}
-            className="space-y-4"
-          >
-            <Field label="Email address" icon={<Mail size={12} />}>
-              <DarkInput
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@organization.org"
-              />
-            </Field>
+          {/* ── Social sign-in ── */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.13 }} className="space-y-3 mb-6">
+            <SocialButton onClick={() => handleSocialLogin("google")} loading={googleLoading}>
+              {googleLoading ? (
+                <Spinner className="size-4 text-white/60" />
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" className="shrink-0">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+              )}
+              <span>{googleLoading ? "Connecting…" : "Continue with Google"}</span>
+            </SocialButton>
 
-            <Field label="Password" icon={<Lock size={12} />}>
-              <div className="relative">
-                <DarkInput
-                  type={showPwd ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="pr-10"
-                />
-                <button
-                  onClick={() => setShowPwd(!showPwd)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/50 transition-colors"
-                >
-                  {showPwd ? <EyeOff size={14} /> : <Eye size={14} />}
-                </button>
-              </div>
-            </Field>
+            <SocialButton onClick={() => handleSocialLogin("facebook")} loading={fbLoading}>
+              {fbLoading ? (
+                <Spinner className="size-4 text-[#1877F2]" />
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" className="shrink-0">
+                  <path fill="#1877F2" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+              )}
+              <span>{fbLoading ? "Connecting…" : "Continue with Facebook"}</span>
+            </SocialButton>
+          </motion.div>
+
+          {/* OR divider */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.18 }}
+            className="flex items-center gap-3 mb-6">
+            <div className="flex-1 h-px bg-white/[0.07]" />
+            <span className="text-[11px] font-medium text-white/20 tracking-widest uppercase">or</span>
+            <div className="flex-1 h-px bg-white/[0.07]" />
+          </motion.div>
+
+          {/* Email + password form */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.21 }} className="space-y-3">
+
+            {/* Email field */}
+            <div className="relative">
+              <motion.div
+                animate={{ borderColor: emailFocused ? "rgba(34,197,94,0.5)" : "rgba(255,255,255,0.08)" }}
+                className="relative rounded-xl border bg-white/[0.04] overflow-hidden transition-colors"
+              >
+                {emailFocused && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className="absolute inset-0 pointer-events-none rounded-xl"
+                    style={{ boxShadow: "0 0 0 1px rgba(34,197,94,0.3) inset" }} />
+                )}
+                <div className="flex items-center px-3.5 gap-2.5">
+                  <Mail size={14} className={`shrink-0 transition-colors ${emailFocused ? "text-emerald-400" : "text-white/20"}`} />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    onFocus={() => setEmailFocused(true)}
+                    onBlur={() => setEmailFocused(false)}
+                    placeholder="you@organization.org"
+                    className="flex-1 h-12 bg-transparent text-sm text-white placeholder:text-white/20 focus:outline-none"
+                  />
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Password field */}
+            <div className="relative">
+              <motion.div
+                animate={{ borderColor: pwdFocused ? "rgba(34,197,94,0.5)" : "rgba(255,255,255,0.08)" }}
+                className="relative rounded-xl border bg-white/[0.04] overflow-hidden transition-colors"
+              >
+                {pwdFocused && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className="absolute inset-0 pointer-events-none rounded-xl"
+                    style={{ boxShadow: "0 0 0 1px rgba(34,197,94,0.3) inset" }} />
+                )}
+                <div className="flex items-center px-3.5 gap-2.5">
+                  <Lock size={14} className={`shrink-0 transition-colors ${pwdFocused ? "text-emerald-400" : "text-white/20"}`} />
+                  <input
+                    type={showPwd ? "text" : "password"}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    onFocus={() => setPwdFocused(true)}
+                    onBlur={() => setPwdFocused(false)}
+                    placeholder="••••••••"
+                    className="flex-1 h-12 bg-transparent text-sm text-white placeholder:text-white/20 focus:outline-none"
+                  />
+                  <button onClick={() => setShowPwd(v => !v)}
+                    className="text-white/20 hover:text-white/50 transition-colors shrink-0 p-1">
+                    {showPwd ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
+              </motion.div>
+            </div>
 
             <div className="flex items-center justify-between pt-0.5">
-              <label className="flex items-center gap-2 text-xs text-white/30 cursor-pointer">
+              <label className="flex items-center gap-2 text-xs text-white/30 cursor-pointer select-none">
                 <input type="checkbox" className="rounded accent-emerald-500" />
                 Remember me
               </label>
               <button className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">Forgot password?</button>
             </div>
 
-            <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                onClick={() => (() => { login(loginRole); navigate(`${loginRole}-dashboard`); })()}
-                className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-all duration-200 shadow-lg shadow-emerald-900/30"
-              >
-                Sign in as {loginRole === "donor" ? "Donor" : loginRole === "ngo" ? "NGO" : loginRole === "volunteer" ? "Volunteer" : "Admin"}
-                <ArrowRight size={15} className="ml-1.5" />
-              </Button>
-            </motion.div>
+            {/* Sign in button */}
+            <motion.button
+              whileHover={{ scale: 1.015 }} whileTap={{ scale: 0.98 }}
+              onClick={() => { login(loginRole); navigate(`${loginRole}-dashboard`); }}
+              className="relative w-full h-12 rounded-xl font-semibold text-sm text-white overflow-hidden transition-all"
+              style={{ background: `linear-gradient(135deg, #16a34a, #22c55e)`, boxShadow: "0 4px 20px rgba(34,197,94,0.25)" }}
+            >
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                Sign in
+                <ArrowRight size={15} />
+              </span>
+            </motion.button>
           </motion.div>
 
-          <p className="text-xs text-white/25 text-center mt-7">
-            Don&apos;t have an account?{" "}
+          {/* Demo role selector */}
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+            className="mt-6 p-3.5 rounded-2xl border border-white/[0.07] bg-white/[0.02]">
+            <p className="text-[10px] font-semibold text-white/20 uppercase tracking-widest mb-3">Demo — sign in as</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {demoRoles.map(r => (
+                <motion.button
+                  key={r.id}
+                  whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.93 }}
+                  onClick={() => setLoginRole(r.id)}
+                  className="flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-xl border transition-all duration-200"
+                  style={loginRole === r.id
+                    ? { borderColor: r.color + "55", background: r.color + "14", boxShadow: `0 0 14px ${r.color}22` }
+                    : { borderColor: "rgba(255,255,255,0.06)", background: "transparent" }
+                  }
+                >
+                  {loginRole === r.id ? (
+                    <motion.div layoutId="role-icon-dot" className="w-1.5 h-1.5 rounded-full absolute -top-0 right-2"
+                      style={{ background: r.color }} />
+                  ) : null}
+                  <r.Icon size={14} style={{ color: loginRole === r.id ? r.color : "rgba(255,255,255,0.22)" }} />
+                  <span className="text-[10px] font-semibold leading-none"
+                    style={{ color: loginRole === r.id ? r.color : "rgba(255,255,255,0.25)" }}>
+                    {r.label}
+                  </span>
+                </motion.button>
+              ))}
+            </div>
+            <AnimatePresence mode="wait">
+              <motion.p key={loginRole}
+                initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.18 }}
+                className="text-[10px] mt-2.5 text-center"
+                style={{ color: activeRole.color + "99" }}>
+                Signing in as {activeRole.label} — no credentials needed
+              </motion.p>
+            </AnimatePresence>
+          </motion.div>
+
+          <p className="text-xs text-white/20 text-center mt-6">
+            No account?{" "}
             <button onClick={() => navigate("register")} className="text-emerald-400 font-medium hover:text-emerald-300 transition-colors">
-              Create one
+              Create one free
             </button>
+          </p>
+
+          <p className="text-[10px] text-white/10 text-center mt-4 leading-relaxed">
+            By signing in, you agree to our{" "}
+            <span className="text-white/20 hover:text-white/40 cursor-pointer transition-colors">Terms of Service</span>
+            {" "}and{" "}
+            <span className="text-white/20 hover:text-white/40 cursor-pointer transition-colors">Privacy Policy</span>
           </p>
         </motion.div>
       </div>

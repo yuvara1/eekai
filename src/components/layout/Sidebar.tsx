@@ -16,7 +16,7 @@ interface NavItem {
   badge?: number;
 }
 
-const navByRole: Record<Role, NavItem[]> = {
+const navByRole: Record<Role, NavItem[]> = { // role-keyed nav config
   donor: [
     { icon: <LayoutDashboard size={16} />, label: "Dashboard",       page: "donor-dashboard" },
     { icon: <Package size={16} />,         label: "My Donations",    page: "donor-donations" },

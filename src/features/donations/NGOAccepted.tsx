@@ -1,7 +1,10 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNav } from "@/hooks/useNav";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 
 const accepted = [
   { id: "DON-000124", food: "Assorted Produce · 48 kg", donor: "Green Harvest Co.", pickup: "Aug 18, 2PM", status: "delivered", volunteer: "Alex Rivera" },
@@ -11,11 +14,29 @@ const accepted = [
 
 export default function NGOAccepted() {
   const navigate = useNav();
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 1400); return () => clearTimeout(t); }, []);
   return (
     <div className="p-4 sm:p-6 space-y-5">
       <motion.h1 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-2xl font-semibold tracking-tight text-foreground">Accepted Donations</motion.h1>
       <div className="space-y-4">
-        {accepted.map((d, i) => {
+        
+      {loading && (
+        <div className="flex items-center gap-2 px-1 py-2 text-xs text-muted-foreground">
+          <Spinner className="size-3 text-muted-foreground" />
+          <span>Loading…</span>
+        </div>
+      )}
+      {loading ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-border p-5 space-y-3">
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-5 w-20 rounded-full" />
+              <Skeleton className="h-3 w-1/2" />
+              <Skeleton className="h-3 w-1/3" />
+            </div>
+          ))
+        ) : accepted.map((d, i) => {
           const accentCls = d.status === "delivered" ? "border-l-4 border-l-primary" : d.status === "pickup" ? "border-l-4 border-l-amber-500" : "border-l-4 border-l-sky-500";
           return (
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1, duration: 0.4 }}

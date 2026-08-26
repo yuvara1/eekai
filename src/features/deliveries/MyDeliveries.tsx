@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNav } from "@/hooks/useNav";
 import { Truck, Clock, Star, Navigation, MapPin, Target, CalendarDays } from "lucide-react";
@@ -7,6 +8,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Skeleton, SkeletonTableRow } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 
 interface MyDeliveriesProps {
 }
@@ -47,6 +50,8 @@ const completedDeliveries = [
 
 export default function MyDeliveries() {
   const navigate = useNav();
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 1400); return () => clearTimeout(t); }, []);
   return (
     <div className="p-3 sm:p-6 space-y-4 sm:space-y-5">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
@@ -80,7 +85,21 @@ export default function MyDeliveries() {
           {/* Active */}
           <TabsContent value="active" className="mt-4">
             <div className="space-y-4">
-              {activeDeliveries.length === 0 ? (
+              
+      {loading && (
+        <div className="flex items-center gap-2 px-1 py-2 text-xs text-muted-foreground">
+          <Spinner className="size-3 text-muted-foreground" />
+          <span>Loading…</span>
+        </div>
+      )}
+      {loading ? (
+                <div className="rounded-xl border border-border p-5 space-y-3">
+                  <Skeleton className="h-5 w-1/2" />
+                  <Skeleton className="h-3 w-3/4" />
+                  <Skeleton className="h-3 w-2/3" />
+                  <Skeleton className="h-3 w-1/3" />
+                </div>
+              ) : activeDeliveries.length === 0 ? (
                 <Card>
                   <CardContent className="p-12 text-center">
                     <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-3">
@@ -198,7 +217,14 @@ export default function MyDeliveries() {
                     </tr>
                   </thead>
                   <tbody className="grid-tbody">
-                    {completedDeliveries.map((d, i) => (
+                    {loading ? (
+                      Array.from({ length: 6 }).map((_, i) => (
+                        <SkeletonTableRow key={i} columns={[
+                          { w: "w-24" }, { w: "w-36" }, { w: "w-48" },
+                          { w: "w-16" }, { w: "w-16" }, { w: "w-12" }, { w: "w-16" },
+                        ]} />
+                      ))
+                    ) : completedDeliveries.map((d, i) => (
                       <tr key={i} className="border-b border-border/60 transition-colors">
                         <td className="font-mono-data text-xs text-muted-foreground py-2.5 pl-4 pr-2">{d.id}</td>
                         <td className="font-medium text-foreground text-sm py-2.5 px-2">{d.food}</td>

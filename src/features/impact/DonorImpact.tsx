@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, useInView } from "framer-motion";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
@@ -7,6 +7,8 @@ import { Download, Share2, Leaf, Utensils, CheckCircle, HandHeart, Wind, Target,
 import { AnimatedCounter } from "@/components/ui/TextEffects";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { SkeletonStatCard, SkeletonChartCard } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 
 const monthlyData = [
   { month: "Mar", kg: 520,  meals: 884  },
@@ -63,6 +65,9 @@ function Section({ children, delay = 0 }: { children: React.ReactNode; delay?: n
 }
 
 export default function DonorImpact() {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 1400); return () => clearTimeout(t); }, []);
+
   return (
     <div className="p-3 sm:p-6 space-y-5 sm:space-y-6">
 
@@ -88,30 +93,46 @@ export default function DonorImpact() {
       </motion.div>
 
       {/* ── Hero stat cards ── */}
-      <motion.div
-        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4"
-        initial="hidden" animate="visible"
-        variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
-      >
-        {stats.map((s, i) => (
-          <motion.div key={i}
-            variants={{ hidden: { opacity: 0, y: 24, scale: 0.94 }, visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } } }}
-            whileHover={{ y: -4, boxShadow: "0 16px 40px rgba(0,0,0,0.15)" }}
-            className={`${s.gradient} rounded-xl p-3 sm:p-4 text-white shadow-sm cursor-default ${i === 4 ? "col-span-2 sm:col-span-1" : ""}`}
-          >
-            <div className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center mb-2 sm:mb-3">
-              <s.Icon size={14} className="text-white" />
-            </div>
-            <div className="font-serif font-semibold italic text-xl sm:text-2xl mb-0.5 leading-none"
-              style={{ fontVariationSettings: "'opsz' 40, 'wght' 600" }}>
-              <AnimatedCounter target={s.val} suffix={s.suffix} />
-            </div>
-            <div className="text-white/80 text-[11px] sm:text-xs leading-tight">{s.label}</div>
-          </motion.div>
-        ))}
-      </motion.div>
+      
+      {loading && (
+        <div className="flex items-center gap-2 px-1 py-2 text-xs text-muted-foreground">
+          <Spinner className="size-3 text-muted-foreground" />
+          <span>Loading…</span>
+        </div>
+      )}
+      {loading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+          {Array.from({ length: 5 }).map((_, i) => <SkeletonStatCard key={i} />)}
+        </div>
+      ) : (
+        <motion.div
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4"
+          initial="hidden" animate="visible"
+          variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
+        >
+          {stats.map((s, i) => (
+            <motion.div key={i}
+              variants={{ hidden: { opacity: 0, y: 24, scale: 0.94 }, visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } } }}
+              whileHover={{ y: -4, boxShadow: "0 16px 40px rgba(0,0,0,0.15)" }}
+              className={`${s.gradient} rounded-xl p-3 sm:p-4 text-white shadow-sm cursor-default ${i === 4 ? "col-span-2 sm:col-span-1" : ""}`}
+            >
+              <div className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center mb-2 sm:mb-3">
+                <s.Icon size={14} className="text-white" />
+              </div>
+              <div className="font-serif font-semibold italic text-xl sm:text-2xl mb-0.5 leading-none"
+                style={{ fontVariationSettings: "'opsz' 40, 'wght' 600" }}>
+                <AnimatedCounter target={s.val} suffix={s.suffix} />
+              </div>
+              <div className="text-white/80 text-[11px] sm:text-xs leading-tight">{s.label}</div>
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
 
       {/* ── Chart ── */}
+      {loading ? (
+        <SkeletonChartCard />
+      ) : (
       <Section delay={0.05}>
         <Card>
           <CardHeader className="pb-2 sm:pb-4">
@@ -151,6 +172,7 @@ export default function DonorImpact() {
           </CardContent>
         </Card>
       </Section>
+      )}
 
       {/* ── Environmental + Milestones ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">

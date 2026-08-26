@@ -1,9 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Package, Truck, AlertTriangle, Filter, Search, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { SkeletonStatCard, SkeletonTableRow } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 
 /* ── Generate large realistic dataset ── */
 const donors = ["Green Harvest Co.", "Metro Grocery", "Grand Hotel", "City Bakehouse", "MegaMart", "Fresh Fields Market", "Sunrise Bakery", "Bay Area Catering", "Golden Gate Deli", "Pacific Foods", "Harbor Restaurant", "Mission Street Café", "North Beach Bistro", "Embarcadero Eats", "SoMa Kitchen"];
@@ -75,6 +77,8 @@ function nextDir(current: SortDir): SortDir {
 }
 
 export default function AdminMonitoring({ view: initialView = "donations" }: { view?: View }) {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 1600); return () => clearTimeout(t); }, []);
   const [view, setView] = useState<View>(initialView);
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -161,45 +165,109 @@ export default function AdminMonitoring({ view: initialView = "donations" }: { v
       </motion.div>
 
       {/* Summary tiles */}
+      
+      {loading && (
+        <div className="flex items-center gap-2 px-1 py-2 text-xs text-muted-foreground">
+          <Spinner className="size-3 text-muted-foreground" />
+          <span>Loading…</span>
+        </div>
+      )}
+      {loading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          {Array.from({ length: 5 }).map((_, i) => <SkeletonStatCard key={i} />)}
+        </div>
+      ) : (
       <AnimatePresence mode="wait">
-        {view === "donations" && (
-          <motion.div key="donation-tiles" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-            className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-            {[
-              { label: "Active", val: donationRows.filter(d=>d.status==="published").length, color: "stat-gradient-sky" },
-              { label: "Matched", val: donationRows.filter(d=>d.status==="matched").length, color: "stat-gradient-violet" },
-              { label: "In pickup", val: donationRows.filter(d=>d.status==="pickup").length, color: "stat-gradient-amber" },
-              { label: "Delivered", val: donationRows.filter(d=>d.status==="delivered").length, color: "stat-gradient-green" },
-              { label: "Expired", val: donationRows.filter(d=>d.status==="expired").length, color: "stat-gradient-rose" },
-            ].map((s, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 16, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ delay: i * 0.06 }} whileHover={{ y: -3, boxShadow: "0 12px 28px rgba(0,0,0,0.2)" }}
-                className={`${s.color} rounded-xl p-3 text-white cursor-default`}>
-                <div className="text-xl font-bold text-white">{s.val}</div>
-                <div className="text-white/80 text-xs">{s.label}</div>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-        {view === "deliveries" && (
-          <motion.div key="delivery-tiles" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-            className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[
-              { label: "Active deliveries", val: deliveryRows.filter(d=>["accepted","in_transit"].includes(d.status)).length, color: "stat-gradient-sky", alert: false },
-              { label: "Delayed", val: deliveryRows.filter(d=>d.delay).length, color: "stat-gradient-rose", alert: true },
-              { label: "Completed", val: deliveryRows.filter(d=>d.status==="delivered").length, color: "stat-gradient-green", alert: false },
-              { label: "Failed", val: deliveryRows.filter(d=>d.status==="failed").length, color: "stat-gradient-amber", alert: false },
-            ].map((s, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 16, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ delay: i * 0.06 }} whileHover={{ y: -3, boxShadow: "0 12px 28px rgba(0,0,0,0.2)" }}
-                className={`${s.color} rounded-xl p-3 text-white cursor-default ${s.alert ? "ring-2 ring-rose-400" : ""}`}>
-                <div className="text-xl font-bold text-white">{s.val}</div>
-                <div className="text-white/80 text-xs">{s.label}</div>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
+        {view === "donations" && (() => {
+          const donStats = [
+            { label: "Active",    val: donationRows.filter(d=>d.status==="published").length, color: "stat-gradient-sky",    bar: "#38bdf8" },
+            { label: "Matched",   val: donationRows.filter(d=>d.status==="matched").length,   color: "stat-gradient-violet", bar: "#a78bfa" },
+            { label: "In pickup", val: donationRows.filter(d=>d.status==="pickup").length,     color: "stat-gradient-amber",  bar: "#fbbf24" },
+            { label: "Delivered", val: donationRows.filter(d=>d.status==="delivered").length,  color: "stat-gradient-green",  bar: "#4ade80" },
+            { label: "Expired",   val: donationRows.filter(d=>d.status==="expired").length,    color: "stat-gradient-rose",   bar: "#fb7185" },
+          ];
+          const total = donStats.reduce((s, d) => s + d.val, 0);
+          return (
+            <motion.div key="donation-tiles" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-2">
+              {/* Proportional stacked bar */}
+              <div className="flex h-2 rounded-full overflow-hidden gap-0.5">
+                {donStats.map((s, i) => (
+                  <motion.div key={i} style={{ background: s.bar }}
+                    initial={{ flex: 0 }} animate={{ flex: s.val }}
+                    transition={{ duration: 0.8, delay: i * 0.06, ease: "easeOut" }} className="rounded-full" />
+                ))}
+              </div>
+              {/* Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {donStats.map((s, i) => {
+                  const pct = total ? Math.round((s.val / total) * 100) : 0;
+                  return (
+                    <motion.div key={i} initial={{ opacity: 0, y: 16, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ delay: i * 0.06 }} whileHover={{ y: -3, boxShadow: "0 12px 28px rgba(0,0,0,0.2)" }}
+                      className={`${s.color} rounded-xl p-3 text-white cursor-default flex flex-col gap-1.5`}>
+                      <div className="text-2xl font-bold leading-none">{s.val}</div>
+                      <div className="text-white/80 text-xs">{s.label}</div>
+                      {/* Mini share bar */}
+                      <div className="h-1 rounded-full bg-white/20 overflow-hidden mt-0.5">
+                        <motion.div className="h-full rounded-full bg-white/80"
+                          initial={{ width: 0 }} animate={{ width: `${pct}%` }}
+                          transition={{ duration: 0.9, delay: 0.2 + i * 0.06, ease: "easeOut" }} />
+                      </div>
+                      <div className="text-white/55 text-[10px] font-mono">{pct}% of total</div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          );
+        })()}
+        {view === "deliveries" && (() => {
+          const delStats = [
+            { label: "Active",    val: deliveryRows.filter(d=>["accepted","in_transit"].includes(d.status)).length, color: "stat-gradient-sky",   bar: "#38bdf8", alert: false },
+            { label: "Delayed",   val: deliveryRows.filter(d=>d.delay).length,                                      color: "stat-gradient-rose",   bar: "#fb7185", alert: true  },
+            { label: "Completed", val: deliveryRows.filter(d=>d.status==="delivered").length,                       color: "stat-gradient-green",  bar: "#4ade80", alert: false },
+            { label: "Failed",    val: deliveryRows.filter(d=>d.status==="failed").length,                          color: "stat-gradient-amber",  bar: "#fbbf24", alert: false },
+          ];
+          const total = delStats.reduce((s, d) => s + d.val, 0);
+          return (
+            <motion.div key="delivery-tiles" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-2">
+              {/* Proportional stacked bar */}
+              <div className="flex h-2 rounded-full overflow-hidden gap-0.5">
+                {delStats.map((s, i) => (
+                  <motion.div key={i} style={{ background: s.bar }}
+                    initial={{ flex: 0 }} animate={{ flex: s.val }}
+                    transition={{ duration: 0.8, delay: i * 0.06, ease: "easeOut" }} className="rounded-full" />
+                ))}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {delStats.map((s, i) => {
+                  const pct = total ? Math.round((s.val / total) * 100) : 0;
+                  return (
+                    <motion.div key={i} initial={{ opacity: 0, y: 16, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ delay: i * 0.06 }} whileHover={{ y: -3, boxShadow: "0 12px 28px rgba(0,0,0,0.2)" }}
+                      className={`${s.color} rounded-xl p-3 text-white cursor-default flex flex-col gap-1.5 ${s.alert ? "ring-2 ring-rose-400/80" : ""}`}>
+                      <div className="flex items-center justify-between">
+                        <div className="text-2xl font-bold leading-none">{s.val}</div>
+                        {s.alert && (
+                          <motion.div className="w-2 h-2 rounded-full bg-white" animate={{ opacity: [1, 0.2, 1] }} transition={{ duration: 1.1, repeat: Infinity }} />
+                        )}
+                      </div>
+                      <div className="text-white/80 text-xs">{s.label}</div>
+                      <div className="h-1 rounded-full bg-white/20 overflow-hidden mt-0.5">
+                        <motion.div className="h-full rounded-full bg-white/80"
+                          initial={{ width: 0 }} animate={{ width: `${pct}%` }}
+                          transition={{ duration: 0.9, delay: 0.2 + i * 0.06, ease: "easeOut" }} />
+                      </div>
+                      <div className="text-white/55 text-[10px] font-mono">{pct}% of total</div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          );
+        })()}
       </AnimatePresence>
+      )}
 
       {/* Search + Filter row */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="flex flex-wrap gap-3 items-center">
@@ -263,7 +331,19 @@ export default function AdminMonitoring({ view: initialView = "donations" }: { v
                   )}
                 </thead>
                 <tbody className="grid-tbody">
-                  {view === "donations"
+                  {loading
+                    ? Array.from({ length: 8 }).map((_, i) => (
+                        view === "donations"
+                          ? <SkeletonTableRow key={i} columns={[
+                              { w: "w-28" }, { w: "w-36" }, { w: "w-28" }, { w: "w-28" },
+                              { w: "w-20", pill: true }, { w: "w-20" }, { w: "w-20" }, { w: "w-12" },
+                            ]} />
+                          : <SkeletonTableRow key={i} columns={[
+                              { w: "w-28" }, { w: "w-36" }, { w: "w-28" }, { w: "w-24" },
+                              { w: "w-28" }, { w: "w-20", pill: true }, { w: "w-16" }, { w: "w-12" },
+                            ]} />
+                      ))
+                    : view === "donations"
                     ? (pageRows as typeof donationRows).map((d) => (
                       <tr key={d.id} className="border-b border-border/60 transition-colors">
                         <td className="font-mono-data text-[10px] text-muted-foreground py-2.5 pl-4 pr-2">{d.id}</td>
@@ -305,6 +385,7 @@ export default function AdminMonitoring({ view: initialView = "donations" }: { v
                     ))
                   }
                 </tbody>
+
               </table>
             </div>
           </Card>

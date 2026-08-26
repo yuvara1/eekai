@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useNav } from "@/hooks/useNav";
 import { motion, useInView } from "framer-motion";
 import { Truck, MapPin, Star, ArrowRight, Navigation, Package, CheckCircle, Wheat, Trophy, Calendar, Leaf, Zap } from "lucide-react";
@@ -6,6 +6,8 @@ import { AnimatedCounter } from "@/components/ui/TextEffects";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Skeleton, SkeletonStatCard, SkeletonTableRow, SkeletonListItem } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 
 const availableDeliveries = [
   { id: "DEL-2026-000088", food: "Prepared Meals · 120 portions", pickup: "The Grand Hotel, 45 Union St", dropoff: "Community Kitchen, 78 Market St", distance: "3.2 km", duration: "18 min", window: "Today, 5:30–7:00 PM", priority: "urgent", weight: "38 kg" },
@@ -38,6 +40,8 @@ function Section({ children, delay = 0, className = "" }: { children: React.Reac
 
 export default function VolunteerDashboard() {
   const navigate = useNav();
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 1400); return () => clearTimeout(t); }, []);
   return (
     <div className="space-y-0">
       {/* ── Hero banner ── */}
@@ -96,34 +100,51 @@ export default function VolunteerDashboard() {
 
       <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
         {/* Stats */}
-        <motion.div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4" initial="hidden" animate="visible"
-          variants={{ visible: { transition: { staggerChildren: 0.08 } } }}>
-          {stats.map((s, i) => {
-            const Icon = s.icon;
-            return (
-              <motion.div key={i}
-                variants={{ hidden: { opacity: 0, y: 24, scale: 0.94 }, visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } } }}
-                whileHover={{ y: -4, boxShadow: "0 16px 40px rgba(0,0,0,0.18)" }}
-                className={`${s.gradient} rounded-xl p-4 text-white shadow-sm cursor-default`}
-              >
-                <div className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center mb-3">
-                  <Icon size={14} className="text-white" />
-                </div>
-                <div className="text-2xl font-bold tracking-tight text-white mb-0.5 leading-none">
-                  {s.label === "Rating"
-                    ? <span>4.9 <Star size={14} className="inline fill-white text-white -mt-0.5" /></span>
-                    : <AnimatedCounter target={s.val} />
-                  }
-                </div>
-                <div className="text-white/75 text-xs font-medium">{s.label}</div>
-                <div className="text-white/40 text-[10px] mt-0.5">{s.delta}</div>
-              </motion.div>
-            );
-          })}
-        </motion.div>
+        
+      {loading && (
+        <div className="flex items-center gap-2 px-1 py-2 text-xs text-muted-foreground">
+          <Spinner className="size-3 text-muted-foreground" />
+          <span>Loading…</span>
+        </div>
+      )}
+      {loading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+            {Array.from({ length: 5 }).map((_, i) => <SkeletonStatCard key={i} />)}
+          </div>
+        ) : (
+          <motion.div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4" initial="hidden" animate="visible"
+            variants={{ visible: { transition: { staggerChildren: 0.08 } } }}>
+            {stats.map((s, i) => {
+              const Icon = s.icon;
+              return (
+                <motion.div key={i}
+                  variants={{ hidden: { opacity: 0, y: 24, scale: 0.94 }, visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } } }}
+                  whileHover={{ y: -4, boxShadow: "0 16px 40px rgba(0,0,0,0.18)" }}
+                  className={`${s.gradient} rounded-xl p-4 text-white shadow-sm cursor-default`}
+                >
+                  <div className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center mb-3">
+                    <Icon size={14} className="text-white" />
+                  </div>
+                  <div className="text-2xl font-bold tracking-tight text-white mb-0.5 leading-none">
+                    {s.label === "Rating"
+                      ? <span>4.9 <Star size={14} className="inline fill-white text-white -mt-0.5" /></span>
+                      : <AnimatedCounter target={s.val} />
+                    }
+                  </div>
+                  <div className="text-white/75 text-xs font-medium">{s.label}</div>
+                  <div className="text-white/40 text-[10px] mt-0.5">{s.delta}</div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        )}
 
         {/* Active delivery banner */}
-        {myDeliveries.length > 0 && (
+        {loading ? (
+          <div className="rounded-xl border border-border bg-foreground/5 p-4">
+            <Skeleton className="h-16 w-full rounded-lg" />
+          </div>
+        ) : myDeliveries.length > 0 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -177,7 +198,9 @@ export default function VolunteerDashboard() {
               </select>
             </CardHeader>
             <CardContent className="p-5 space-y-4">
-              {availableDeliveries.map((d, i) => (
+              {loading ? (
+                Array.from({ length: 4 }).map((_, i) => <SkeletonListItem key={i} />)
+              ) : availableDeliveries.map((d, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, y: 16 }}
@@ -277,7 +300,14 @@ export default function VolunteerDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {[
+                    {loading ? (
+                      Array.from({ length: 5 }).map((_, i) => (
+                        <SkeletonTableRow key={i} columns={[
+                          { w: "w-24" }, { w: "w-36" }, { w: "w-44" },
+                          { w: "w-16" }, { w: "w-16" }, { w: "w-16" },
+                        ]} />
+                      ))
+                    ) : [
                       { id: "DEL-085", food: "Produce Mix · 48 kg", route: "Green Harvest → Community Kitchen", dist: "5.1 km", date: "Aug 18", rating: 5 },
                       { id: "DEL-084", food: "Bakery · 22 kg", route: "City Bakehouse → Faith Community", dist: "7.4 km", date: "Aug 17", rating: 5 },
                       { id: "DEL-083", food: "Dairy · 31 kg", route: "Metro Grocery → Hope Foundation", dist: "3.8 km", date: "Aug 16", rating: 4 },

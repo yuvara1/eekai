@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Edit2, Trash2, CheckCircle, X, Leaf, ShoppingBag, Sandwich, UtensilsCrossed, Package, Drumstick } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 
 const categoryIcon: Record<string, React.ElementType> = {
   "Produce & Vegetables": Leaf,
@@ -64,6 +66,9 @@ const categories = [
 const dietaryOptions = ["Vegetarian", "Vegan", "Halal", "Kosher", "Gluten-free", "No restrictions"];
 
 export default function NGORequirements() {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 1400); return () => clearTimeout(t); }, []);
+
   const [showForm, setShowForm] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>(["Vegetarian"]);
 
@@ -86,7 +91,7 @@ export default function NGORequirements() {
 
       {/* Add form */}
       <AnimatePresence>
-        {showForm && (
+        {showForm && !loading && (
           <motion.div
             initial={{ opacity: 0, y: -12, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -169,9 +174,42 @@ export default function NGORequirements() {
         )}
       </AnimatePresence>
 
+      {loading && showForm && (
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle>New Requirement</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-9 w-full" />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Requirements list */}
       <div className="space-y-4">
-        {requirements.map((r, i) => (
+        
+      {loading && (
+        <div className="flex items-center gap-2 px-1 py-2 text-xs text-muted-foreground">
+          <Spinner className="size-3 text-muted-foreground" />
+          <span>Loading…</span>
+        </div>
+      )}
+      {loading ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-5 space-y-3">
+                <Skeleton className="h-5 w-1/2" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-5/6" />
+                <Skeleton className="h-3 w-2/3" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </CardContent>
+            </Card>
+          ))
+        ) : requirements.map((r, i) => (
           <motion.div
             key={r.id}
             initial={{ opacity: 0, y: 16 }}
@@ -243,3 +281,4 @@ export default function NGORequirements() {
     </div>
   );
 }
+

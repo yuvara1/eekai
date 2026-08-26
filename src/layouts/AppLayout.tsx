@@ -1,6 +1,7 @@
-import { Suspense, lazy, useState } from "react";
+import React, { Suspense, lazy, useState, useRef, useEffect } from "react";
 import { Outlet, useLocation, useNavigate, Navigate } from "react-router";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
+import { ChevronDown } from "lucide-react";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -9,6 +10,7 @@ import AppSidebar, { SidebarNavContent } from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
 import RightPanel from "@/components/layout/RightPanel";
 import Modal from "@/components/layout/Modal";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
 const DeliveryTracking = lazy(() => import("@/features/deliveries/DeliveryTracking"));
 const DonationDetails = lazy(() => import("@/features/donations/DonationDetails"));
@@ -48,6 +50,83 @@ function PageSkeleton() {
   );
 }
 
+function ScrollFade({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [atBottom, setAtBottom] = useState(false);
+  const [hasOverflow, setHasOverflow] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const check = () => {
+      const overflow = el.scrollHeight > el.clientHeight + 4;
+      const bottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 8;
+      setHasOverflow(overflow);
+      setAtBottom(bottom);
+    };
+
+    check();
+    el.addEventListener("scroll", check, { passive: true });
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => { el.removeEventListener("scroll", check); ro.disconnect(); };
+  }, []);
+
+  const showIndicator = hasOverflow && !atBottom;
+
+  return (
+    <div className="relative flex-1 flex flex-col min-h-0 overflow-hidden">
+      <div
+        ref={ref}
+        className="flex-1 overflow-y-auto flex flex-col min-w-0 scroll-hide"
+      >
+        {children}
+      </div>
+
+      {/* Bottom fade gradient */}
+      <AnimatePresence>
+        {showIndicator && (
+          <motion.div
+            key="fade"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="pointer-events-none absolute bottom-0 left-0 right-0 h-20"
+            style={{
+              background: "linear-gradient(to top, var(--background) 0%, transparent 100%)",
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Scroll indicator pill */}
+      <AnimatePresence>
+        {showIndicator && (
+          <motion.button
+            key="pill"
+            initial={{ opacity: 0, y: 8, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.9 }}
+            transition={{ duration: 0.25 }}
+            onClick={() => ref.current?.scrollBy({ top: 200, behavior: "smooth" })}
+            className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-foreground/90 text-background text-[11px] font-semibold shadow-lg backdrop-blur-sm z-10 hover:bg-foreground transition-colors"
+          >
+            <motion.span
+              animate={{ y: [0, 2, 0] }}
+              transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <ChevronDown size={11} />
+            </motion.span>
+            Scroll
+          </motion.button>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 function Shell() {
   const { containerRef } = useTheme();
   const { role } = useAuth();
@@ -55,6 +134,7 @@ function Shell() {
   const navigate = useNavigate();
   const onNavigate = useNav();
   const isMobile = useIsMobile();
+  const isXl = !useIsMobile(1280);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const searchParams = new URLSearchParams(location.search);
@@ -110,23 +190,56 @@ function Shell() {
             onNavigate={onNavigate}
           />
           <div className="flex-1 flex min-h-0 overflow-hidden">
-            <main className="flex-1 overflow-y-auto min-w-0 flex flex-col">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={location.pathname}
-                  initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-                  className="flex-1 flex flex-col min-h-0"
-                >
-                  <Suspense fallback={<PageSkeleton />}>
-                    <Outlet />
-                  </Suspense>
-                </motion.div>
-              </AnimatePresence>
-            </main>
-            <RightPanel role={role} onNavigate={onNavigate} />
+            {isXl ? (
+              <ResizablePanelGroup
+                direction="horizontal"
+                className="flex-1 min-h-0 overflow-hidden"
+              >
+                {/* Main content — 74% default, clamps 60–85% */}
+                <ResizablePanel defaultSize="74" minSize="60" maxSize="85" style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}>
+                  <ScrollFade>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={location.pathname}
+                        initial={{ opacity: 0, y: 14 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                        className="flex-1 flex flex-col min-h-0"
+                      >
+                        <Suspense fallback={<PageSkeleton />}>
+                          <Outlet />
+                        </Suspense>
+                      </motion.div>
+                    </AnimatePresence>
+                  </ScrollFade>
+                </ResizablePanel>
+                <ResizableHandle withHandle />
+                {/* Right panel — 26% default, clamps 15–40%, CSS floor 240px */}
+                <ResizablePanel defaultSize="22" minSize="20" maxSize="25">
+                  <div className="h-full" style={{ minWidth: 240 }}>
+                    <RightPanel role={role} onNavigate={onNavigate} />
+                  </div>
+                </ResizablePanel>
+              </ResizablePanelGroup>
+            ) : (
+              <ScrollFade>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={location.pathname}
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex-1 flex flex-col min-h-0"
+                  >
+                    <Suspense fallback={<PageSkeleton />}>
+                      <Outlet />
+                    </Suspense>
+                  </motion.div>
+                </AnimatePresence>
+              </ScrollFade>
+            )}
           </div>
         </div>
 

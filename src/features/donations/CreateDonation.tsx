@@ -3,7 +3,8 @@ import { useNav } from "@/hooks/useNav";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, X, Info, CheckCircle, Camera, Package, MapPin, Loader2, AlertCircle } from "lucide-react";
+import { Upload, X, Info, CheckCircle, Camera, Package, MapPin, AlertCircle } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -133,7 +134,7 @@ export default function CreateDonation() {
           <div className="flex gap-2">
             <Button type="button" variant="outline" size="sm">Save Draft</Button>
             <Button type="submit" size="sm" disabled={isSubmitting || publishMutation.isPending} className="gap-1.5">
-              {(isSubmitting || publishMutation.isPending) ? <><Loader2 size={14} className="animate-spin" /> Publishing…</> : "Publish Donation"}
+              {(isSubmitting || publishMutation.isPending) ? <><Spinner className="size-3.5" /> Publishing…</> : "Publish Donation"}
             </Button>
           </div>
         </motion.div>
@@ -334,7 +335,7 @@ export default function CreateDonation() {
           <div className="flex gap-2">
             <Button type="button" variant="outline">Save Draft</Button>
             <Button type="submit" disabled={isSubmitting || publishMutation.isPending} className="gap-1.5">
-              {(isSubmitting || publishMutation.isPending) ? <><Loader2 size={14} className="animate-spin" /> Publishing…</> : <><CheckCircle size={14} /> Publish Donation</>}
+              {(isSubmitting || publishMutation.isPending) ? <><Spinner className="size-3.5" /> Publishing…</> : <><CheckCircle size={14} /> Publish Donation</>}
             </Button>
           </div>
         </motion.div>

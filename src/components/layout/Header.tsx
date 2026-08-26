@@ -1,6 +1,10 @@
 import { motion } from "framer-motion";
-import { Bell, Search, ChevronRight, Command, Menu, Sun, Moon, ArrowLeft } from "lucide-react";
+import { Bell, Search, Command, Menu, Sun, Moon, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Breadcrumb, BreadcrumbItem, BreadcrumbLink,
+  BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useNavigate } from "react-router";
 
@@ -45,27 +49,28 @@ export default function Header({ title, breadcrumb = [], notifCount = 0, onSearc
       </motion.div>
 
       {/* Breadcrumb */}
-      <div className="flex items-center gap-1 flex-1 min-w-0 overflow-hidden">
-        {breadcrumb.map((crumb, i) => (
-          <motion.span key={i} initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.05 }} className="flex items-center gap-1 min-w-0 shrink-0">
-            {i > 0 && <ChevronRight size={11} className="text-border shrink-0" />}
-            <span
-              style={{ fontFamily: "var(--font-display)", fontSize: "13px" }}
-              className={[
-                i === breadcrumb.length - 1 ? "font-semibold text-foreground" : "font-normal text-muted-foreground",
-                i < breadcrumb.length - 1 && i > 0 ? "hidden sm:inline" : "",
-              ].join(" ")}
-            >
-              {crumb}
-            </span>
-          </motion.span>
-        ))}
-        {breadcrumb.length === 0 && (
-          <span style={{ fontFamily: "var(--font-display)", fontSize: "13px" }} className="font-semibold text-foreground">
-            {title}
-          </span>
-        )}
+      <div className="flex-1 min-w-0 overflow-hidden">
+        <Breadcrumb>
+          <BreadcrumbList>
+            {breadcrumb.length === 0 ? (
+              <BreadcrumbItem>
+                <BreadcrumbPage>{title}</BreadcrumbPage>
+              </BreadcrumbItem>
+            ) : breadcrumb.map((crumb, i) => (
+              <motion.span key={i} className="flex items-center gap-1.5"
+                initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.05 }}>
+                {i > 0 && <BreadcrumbSeparator />}
+                <BreadcrumbItem className={i < breadcrumb.length - 1 && i > 0 ? "hidden sm:flex" : ""}>
+                  {i === breadcrumb.length - 1
+                    ? <BreadcrumbPage>{crumb}</BreadcrumbPage>
+                    : <BreadcrumbLink href="#" className="text-muted-foreground hover:text-foreground transition-colors">{crumb}</BreadcrumbLink>
+                  }
+                </BreadcrumbItem>
+              </motion.span>
+            ))}
+          </BreadcrumbList>
+        </Breadcrumb>
       </div>
 
       {/* Search — desktop */}

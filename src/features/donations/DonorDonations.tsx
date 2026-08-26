@@ -1,9 +1,11 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { useNav } from "@/hooks/useNav";
+import { SkeletonTableRow } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 
 function sr(s: number) { let x = Math.sin(s) * 10000; return x - Math.floor(x); }
 const _ngos = ["Community Kitchen","Hope Foundation","City Shelter","Faith Community","Metro Food Bank","Sunrise Care","Bay Volunteers","Urban Harvest"];
@@ -24,6 +26,8 @@ function SortIcon({ col, sortCol, dir }: { col: string; sortCol: string | null; 
 
 export default function DonorDonations() {
   const navigate = useNav();
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 1500); return () => clearTimeout(t); }, []);
   const [filter, setFilter] = useState("all");
   const [ddPage, setDdPage] = useState(1);
   const [pageSize, setPageSize] = useState<typeof PAGE_SIZES[number]>(20);
@@ -118,6 +122,12 @@ export default function DonorDonations() {
 
       {/* Table */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.4 }}>
+        {loading && (
+          <div className="flex items-center gap-2 px-1 py-1 text-xs text-muted-foreground">
+            <Spinner className="size-3 text-muted-foreground" />
+            <span>Loading…</span>
+          </div>
+        )}
         <Card className="overflow-hidden">
           <div className="grid-scroll" style={{ height: "calc(100vh - 300px)", minHeight: 240 }}>
             <table className="w-full text-sm border-collapse min-w-[640px]">
@@ -134,7 +144,14 @@ export default function DonorDonations() {
                 </tr>
               </thead>
               <tbody className="grid-tbody">
-                {pageRows.map((d) => (
+                {loading ? (
+                  Array.from({ length: 8 }).map((_, i) => (
+                    <SkeletonTableRow key={i} columns={[
+                      { w: "w-32" }, { w: "w-40" }, { w: "w-16" },
+                      { w: "w-20", pill: true }, { w: "w-32" }, { w: "w-24" }, { w: "w-20" }, { w: "w-12" },
+                    ]} />
+                  ))
+                ) : pageRows.map((d) => (
                   <tr key={d.id} className="border-b border-border/60 transition-colors">
                     <td className="font-mono-data text-xs text-muted-foreground py-2.5 pl-4 pr-2">{d.id}</td>
                     <td className="font-medium text-foreground py-2.5 px-2 max-w-[160px]"><span className="block truncate">{d.food}</span></td>

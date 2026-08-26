@@ -1,12 +1,15 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useNav } from "@/hooks/useNav";
 import { motion, useInView } from "framer-motion";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Package, Truck, Filter, Search, ArrowRight, Target, CheckCircle, Clock, Handshake, Wheat, MapPin, Timer, ShoppingBag, Leaf } from "lucide-react";
 import { AnimatedCounter } from "@/components/ui/TextEffects";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SkeletonStatCard, SkeletonChartCard, SkeletonTableRow, SkeletonListItem } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 
 const weeklyData = [
   { day: "Mon", kg: 180 },
@@ -46,6 +49,8 @@ function Section({ children, delay = 0, className = "" }: { children: React.Reac
 
 export default function NGODashboard() {
   const navigate = useNav();
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 1400); return () => clearTimeout(t); }, []);
   return (
     <div className="space-y-0">
       {/* ── Hero banner ── */}
@@ -97,85 +102,123 @@ export default function NGODashboard() {
 
       <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
         {/* Stats */}
-        <motion.div className="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4" initial="hidden" animate="visible"
-          variants={{ visible: { transition: { staggerChildren: 0.07 } } }}>
-          {stats.map((s, i) => {
-            const Icon = s.icon;
-            return (
-              <motion.div key={i}
-                variants={{ hidden: { opacity: 0, y: 24, scale: 0.94 }, visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } } }}
-                whileHover={{ y: -4, boxShadow: "0 16px 40px rgba(0,0,0,0.18)" }}
-                className={`${s.gradient} rounded-xl p-4 text-white shadow-sm cursor-default`}
-              >
-                <div className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center mb-3">
-                  <Icon size={14} className="text-white" />
-                </div>
-                <div className="text-2xl font-bold tracking-tight text-white mb-0.5 leading-none">
-                  <AnimatedCounter target={s.val} />
-                </div>
-                <div className="text-white/75 text-xs font-medium">{s.label}</div>
-                <div className="text-white/40 text-[10px] mt-0.5">{s.delta}</div>
-              </motion.div>
-            );
-          })}
-        </motion.div>
+        
+      {loading && (
+        <div className="flex items-center gap-2 px-1 py-2 text-xs text-muted-foreground">
+          <Spinner className="size-3 text-muted-foreground" />
+          <span>Loading…</span>
+        </div>
+      )}
+      {loading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4">
+            {Array.from({ length: 6 }).map((_, i) => <SkeletonStatCard key={i} />)}
+          </div>
+        ) : (
+          <motion.div className="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4" initial="hidden" animate="visible"
+            variants={{ visible: { transition: { staggerChildren: 0.07 } } }}>
+            {stats.map((s, i) => {
+              const Icon = s.icon;
+              return (
+                <motion.div key={i}
+                  variants={{ hidden: { opacity: 0, y: 24, scale: 0.94 }, visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } } }}
+                  whileHover={{ y: -4, boxShadow: "0 16px 40px rgba(0,0,0,0.18)" }}
+                  className={`${s.gradient} rounded-xl p-4 text-white shadow-sm cursor-default`}
+                >
+                  <div className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center mb-3">
+                    <Icon size={14} className="text-white" />
+                  </div>
+                  <div className="text-2xl font-bold tracking-tight text-white mb-0.5 leading-none">
+                    <AnimatedCounter target={s.val} />
+                  </div>
+                  <div className="text-white/75 text-xs font-medium">{s.label}</div>
+                  <div className="text-white/40 text-[10px] mt-0.5">{s.delta}</div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        )}
 
         {/* Chart + Pending */}
-        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
-          <Section delay={0.05} className="lg:col-span-2">
-            <Card className="shadow-sm h-full">
-              <CardHeader className="pb-2 border-b border-border">
-                <CardTitle className="text-base">Weekly Food Received</CardTitle>
-                <CardDescription>Kilograms received per day this week</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={weeklyData} barSize={28}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis dataKey="day" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid var(--border)", background: "var(--card)", color: "var(--foreground)" }} formatter={(v) => [`${v} kg`, "Received"]} />
-                    <Bar dataKey="kg" fill="var(--foreground)" radius={[5, 5, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Section>
+        {loading ? (
+          <div className="flex gap-3 sm:gap-4">
+            <div className="flex-[65]"><SkeletonChartCard /></div>
+            <div className="flex-[35]">
+              <Card className="shadow-sm">
+                <CardHeader className="pb-2 border-b border-border">
+                  <CardTitle className="text-base">Pending Pickups</CardTitle>
+                  <CardDescription>Scheduled for collection</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="space-y-3">
+                    {Array.from({ length: 3 }).map((_, i) => <SkeletonListItem key={i} />)}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        ) : (
+          <ResizablePanelGroup direction="horizontal" className="!h-auto rounded-none gap-0">
+            <ResizablePanel defaultSize="65" minSize="40" maxSize="80">
+              <Section delay={0.05} className="pr-3">
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2 border-b border-border">
+                    <CardTitle className="text-base">Weekly Food Received</CardTitle>
+                    <CardDescription>Kilograms received per day this week</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <ResponsiveContainer width="100%" height={200}>
+                      <BarChart data={weeklyData} barSize={28}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                        <XAxis dataKey="day" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+                        <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid var(--border)", background: "var(--card)", color: "var(--foreground)" }} formatter={(v) => [`${v} kg`, "Received"]} />
+                        <Bar dataKey="kg" fill="var(--foreground)" radius={[5, 5, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </Section>
+            </ResizablePanel>
 
-          <Section delay={0.1}>
-            <Card className="shadow-sm h-full">
-              <CardHeader className="pb-2 border-b border-border">
-                <CardTitle className="text-base">Pending Pickups</CardTitle>
-                <CardDescription>Scheduled for collection</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <div className="space-y-3">
-                  {[
-                    { food: "Prepared Meals", donor: "Grand Hotel", time: "Today 6PM", status: "accepted", urgent: true },
-                    { food: "Fresh Produce", donor: "Green Harvest", time: "Tomorrow 2PM", status: "accepted", urgent: false },
-                    { food: "Bakery Items", donor: "City Bakehouse", time: "Aug 22 8AM", status: "matched", urgent: false },
-                  ].map((p, i) => (
-                    <motion.div key={i} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 + i * 0.08 }}
-                      whileHover={{ x: 4 }}
-                      className={`flex items-start gap-3 p-3 rounded-xl transition-all ${p.urgent ? "bg-foreground/5 border border-border" : "bg-muted"}`}>
-                      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0 border border-border">
-                        <Truck size={13} className="text-foreground" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-xs text-foreground">{p.food}</div>
-                        <div className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
-                          <Timer size={9} /> {p.time}
-                        </div>
-                        <div className="text-[10px] text-muted-foreground">{p.donor}</div>
-                      </div>
-                      <span className={`badge badge-${p.status} text-[10px] shrink-0`}>{p.status}</span>
-                    </motion.div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </Section>
-        </div>
+            <ResizableHandle withHandle />
+
+            <ResizablePanel defaultSize="35" minSize="20" maxSize="60">
+              <Section delay={0.1} className="pl-3">
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2 border-b border-border">
+                    <CardTitle className="text-base">Pending Pickups</CardTitle>
+                    <CardDescription>Scheduled for collection</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="space-y-3">
+                      {[
+                        { food: "Prepared Meals", donor: "Grand Hotel", time: "Today 6PM", status: "accepted", urgent: true },
+                        { food: "Fresh Produce", donor: "Green Harvest", time: "Tomorrow 2PM", status: "accepted", urgent: false },
+                        { food: "Bakery Items", donor: "City Bakehouse", time: "Aug 22 8AM", status: "matched", urgent: false },
+                      ].map((p, i) => (
+                        <motion.div key={i} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 + i * 0.08 }}
+                          whileHover={{ x: 4 }}
+                          className={`flex items-start gap-3 p-3 rounded-xl transition-all ${p.urgent ? "bg-foreground/5 border border-border" : "bg-muted"}`}>
+                          <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0 border border-border">
+                            <Truck size={13} className="text-foreground" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-xs text-foreground">{p.food}</div>
+                            <div className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                              <Timer size={9} /> {p.time}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground">{p.donor}</div>
+                          </div>
+                          <span className={`badge badge-${p.status} text-[10px] shrink-0`}>{p.status}</span>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </Section>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        )}
 
         {/* Available donations */}
         <Section delay={0.1}>
@@ -201,7 +244,9 @@ export default function NGODashboard() {
               </div>
             </CardHeader>
             <CardContent className="p-3 sm:p-5 space-y-3 sm:space-y-4">
-              {availableDonations.map((d, i) => (
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => <SkeletonListItem key={i} />)
+              ) : availableDonations.map((d, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, y: 16 }}

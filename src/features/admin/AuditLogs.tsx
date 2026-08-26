@@ -1,9 +1,11 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+import { SkeletonTableRow } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 
 function asr(s: number) { let x = Math.sin(s*1.7+3.14)*10000; return x - Math.floor(x); }
 const _users = ["admin@foodbridge.io","sarah@greenharvest.org","alex@email.com","priya@hope.org","james@commkitchen.org","maria@cityshelter.org","tom@metrofoodbank.org","grace@faithcomm.org","omar@urbanharvest.org","lily@sunrise.org","unknown"];
@@ -25,6 +27,8 @@ function SortIcon({ col, sortCol, dir }: { col: string; sortCol: string | null; 
 }
 
 export default function AuditLogs() {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 1500); return () => clearTimeout(t); }, []);
   const [alPage, setAlPage] = useState(1);
   const [alSearch, setAlSearch] = useState("");
   const [pageSize, setPageSize] = useState<typeof PAGE_SIZES[number]>(20);
@@ -84,6 +88,12 @@ export default function AuditLogs() {
 
   return (
     <div className="p-4 sm:p-6 flex flex-col gap-4 sm:gap-5">
+      {loading && (
+        <div className="flex items-center gap-2 px-1 py-2 text-xs text-muted-foreground">
+          <Spinner className="size-3 text-muted-foreground" />
+          <span>Loading…</span>
+        </div>
+      )}
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
@@ -126,7 +136,14 @@ export default function AuditLogs() {
                 </tr>
               </thead>
               <tbody className="grid-tbody">
-                {logs.map((l, i) => (
+                {loading
+                  ? Array.from({ length: 10 }).map((_, i) => (
+                      <SkeletonTableRow key={i} columns={[
+                        { w: "w-32" }, { w: "w-28" }, { w: "w-16", pill: true },
+                        { w: "w-24" }, { w: "w-20" }, { w: "w-20" }, { w: "w-24" }, { w: "w-16", pill: true },
+                      ]} />
+                    ))
+                  : logs.map((l, i) => (
                   <tr key={i} className="border-b border-border/60 transition-colors">
                     <td className="font-mono-data text-[10px] text-muted-foreground py-2.5 pl-4 pr-2 whitespace-nowrap">{l.ts}</td>
                     <td className="text-xs text-foreground py-2.5 px-2">{l.user}</td>

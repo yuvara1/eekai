@@ -3,8 +3,9 @@ import { useNav } from "@/hooks/useNav";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import {
   Mail, Phone, MapPin, Send, MessageSquare, Clock, Globe, CheckCircle,
-  Package, Handshake, Truck, ShieldCheck, ChevronRight, Loader2
+  Package, Handshake, Truck, ShieldCheck, ChevronRight,
 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { Spotlight } from "@/components/ui/spotlight";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { GlowingStarsBackgroundCard } from "@/components/ui/glowing-stars";
@@ -202,7 +203,7 @@ export default function Contact() {
                       </div>
                       <motion.div whileHover={{ scale: 1.01, boxShadow: "0 8px 30px rgba(34,197,94,0.25)" }} whileTap={{ scale: 0.98 }}>
                         <Button type="submit" disabled={sending} className="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-semibold py-2.5 h-auto gap-2">
-                          {sending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+                          {sending ? <Spinner className="size-4" /> : <Send size={15} />}
                           {sending ? "Sending..." : "Send message"}
                         </Button>
                       </motion.div>

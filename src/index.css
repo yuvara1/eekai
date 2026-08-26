@@ -248,6 +248,28 @@
   }
 }
 
+/* Utility: hide scrollbar while keeping scroll behaviour */
+.scroll-hide {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.scroll-hide::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Hide scrollbars on react-resizable-panels panel divs */
+[data-panel] {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+[data-panel]::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 /* ── Font utilities ─────────────────────────────────────────── */
 .font-display   { font-family: var(--font-display); }
 .font-serif     { font-family: var(--font-serif); }

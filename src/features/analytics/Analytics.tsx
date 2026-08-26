@@ -1,13 +1,16 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, useInView } from "framer-motion";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  RadialBarChart, RadialBar,
 } from "recharts";
 import { Download, Leaf, UtensilsCrossed, Sprout, CheckCircle2, Zap, Truck, Timer, Star, BarChart2 } from "lucide-react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Skeleton, SkeletonStatCard, SkeletonChartCard } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
 
 const MotionCard = motion.create(Card);
 const MotionButton = motion.create(Button);
@@ -38,15 +41,16 @@ const ngoPerformance = [
   { name: "Metro Food Bank", accepted: 48, delivered: 45 },
 ];
 
-const metrics = [
-  { label: "Total Food Rescued", val: "284,500 kg", delta: "+12%", Icon: Leaf, color: "#16a34a" },
-  { label: "Meals Distributed", val: "~48,200", delta: "+8%", Icon: UtensilsCrossed, color: "#0ea5e9" },
-  { label: "Carbon Avoided", val: "142 tonnes CO₂", delta: "+11%", Icon: Sprout, color: "#22c55e" },
-  { label: "Donation Success Rate", val: "87%", delta: "+2pp", Icon: CheckCircle2, color: "#16a34a" },
-  { label: "Avg. Matching Time", val: "48 min", delta: "−12%", Icon: Zap, color: "#f59e0b" },
-  { label: "Avg. Delivery Time", val: "61 min", delta: "−8%", Icon: Truck, color: "#8b5cf6" },
-  { label: "Expiration Rate", val: "6.8%", delta: "−1.2pp", Icon: Timer, color: "#f43f5e" },
-  { label: "Volunteer Completion", val: "96.2%", delta: "+0.8pp", Icon: Star, color: "#f59e0b" },
+type MetricViz = "sparkbar" | "radial" | "gauge" | "inverse";
+const metrics: { label: string; val: string; delta: string; Icon: React.ElementType; color: string; viz: MetricViz; pct?: number; sparkData?: { v: number }[] }[] = [
+  { label: "Total Food Rescued",    val: "284,500 kg",    delta: "+12%",   Icon: Leaf,         color: "#16a34a", viz: "sparkbar",  sparkData: [{ v: 18200 }, { v: 22400 }, { v: 19800 }, { v: 28600 }, { v: 34200 }, { v: 31800 }] },
+  { label: "Meals Distributed",     val: "~48,200",       delta: "+8%",    Icon: UtensilsCrossed, color: "#0ea5e9", viz: "sparkbar", sparkData: [{ v: 32000 }, { v: 36500 }, { v: 34100 }, { v: 41200 }, { v: 46800 }, { v: 48200 }] },
+  { label: "Carbon Avoided",        val: "142 t CO₂",     delta: "+11%",   Icon: Sprout,       color: "#22c55e", viz: "radial",    pct: 71 },
+  { label: "Donation Success Rate", val: "87%",           delta: "+2pp",   Icon: CheckCircle2, color: "#16a34a", viz: "radial",    pct: 87 },
+  { label: "Avg. Matching Time",    val: "48 min",        delta: "−12%",   Icon: Zap,          color: "#f59e0b", viz: "gauge",     pct: 40 },
+  { label: "Avg. Delivery Time",    val: "61 min",        delta: "−8%",    Icon: Truck,        color: "#8b5cf6", viz: "gauge",     pct: 51 },
+  { label: "Expiration Rate",       val: "6.8%",          delta: "−1.2pp", Icon: Timer,        color: "#f43f5e", viz: "inverse",   pct: 7 },
+  { label: "Volunteer Completion",  val: "96.2%",         delta: "+0.8pp", Icon: Star,         color: "#f59e0b", viz: "radial",    pct: 96 },
 ];
 
 function Section({ children, delay = 0, className }: { children: React.ReactNode; delay?: number; className?: string }) {
@@ -61,29 +65,39 @@ function Section({ children, delay = 0, className }: { children: React.ReactNode
 }
 
 export default function Analytics() {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 1500); return () => clearTimeout(t); }, []);
+
   return (
     <div className="space-y-0">
-      {/* ── Hero banner ── */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-emerald-700 via-green-600 to-teal-500 px-6 py-8">
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
-        <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/10 blur-3xl pointer-events-none" />
-        <motion.div className="absolute right-24 top-1/2 -translate-y-1/2 opacity-10" animate={{ rotate: [0, 360] }} transition={{ duration: 30, repeat: Infinity, ease: "linear" }}>
-          <BarChart2 size={72} className="text-white" />
-        </motion.div>
-        <div className="relative z-10 flex items-center justify-between">
+      {/* ── Hero banner — matches app's bg-foreground pattern ── */}
+      <div className="relative overflow-hidden bg-foreground px-4 py-6 sm:px-6 sm:py-8">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <motion.div
+            className="absolute -inset-8"
+            style={{
+              backgroundImage: "radial-gradient(circle, color-mix(in srgb, var(--background) 40%, transparent) 1.5px, transparent 1.5px)",
+              backgroundSize: "28px 28px",
+            }}
+            animate={{ x: [0, 28], y: [0, 28] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+          />
+        </div>
+        <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-background/5 blur-3xl pointer-events-none" />
+        <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-6 h-6 rounded-md bg-white/20 flex items-center justify-center">
-                <Leaf size={12} className="text-white" />
+              <div className="w-6 h-6 rounded-md bg-background/20 flex items-center justify-center">
+                <Leaf size={12} className="text-background" />
               </div>
-              <span className="text-white/60 text-xs font-medium">Analytics</span>
+              <span className="text-background/60 text-xs font-medium">Analytics</span>
             </div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Impact Analytics</h1>
-            <p className="text-white/60 text-sm mt-1">Platform-wide metrics and environmental impact data.</p>
+            <h1 className="text-2xl font-bold text-background tracking-tight">Impact Analytics</h1>
+            <p className="text-background/60 text-sm mt-1">Platform-wide metrics and environmental impact data.</p>
           </motion.div>
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="flex gap-2">
             <Select defaultValue="6months">
-              <SelectTrigger className="w-auto text-sm bg-white/10 text-white border-white/20 hover:bg-white/20">
+              <SelectTrigger className="w-auto text-sm bg-background/10 text-background border-background/20 hover:bg-background/20">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -92,18 +106,18 @@ export default function Analytics() {
                 <SelectItem value="all">All time</SelectItem>
               </SelectContent>
             </Select>
-            <MotionButton whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} className="bg-white text-emerald-700 hover:bg-white/90 font-semibold shadow-lg shadow-black/10 flex items-center gap-1.5">
+            <MotionButton whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} className="bg-background text-foreground hover:bg-background/90 font-semibold shadow-lg shadow-black/20 flex items-center gap-1.5">
               <Download size={14} /> Export
             </MotionButton>
           </motion.div>
         </div>
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-          className="relative z-10 flex gap-5 mt-6 pt-5 border-t border-white/15">
+          className="relative z-10 flex gap-5 mt-6 pt-5 border-t border-background/15">
           {[{ label: "this month", val: "31,800 kg" }, { label: "CO₂ avoided", val: "142 t" }, { label: "success rate", val: "87%" }].map((s, i) => (
             <div key={i} className="flex items-center gap-1.5">
-              <Sprout size={10} className="text-white/40" />
-              <span className="text-white font-semibold text-sm">{s.val}</span>
-              <span className="text-white/40 text-xs">{s.label}</span>
+              <Sprout size={10} className="text-background/40" />
+              <span className="text-background font-semibold text-sm">{s.val}</span>
+              <span className="text-background/40 text-xs">{s.label}</span>
             </div>
           ))}
         </motion.div>
@@ -112,10 +126,26 @@ export default function Analytics() {
     <div className="p-6 space-y-6">
 
       {/* Top metrics */}
-      <motion.div className="grid grid-cols-2 lg:grid-cols-4 gap-4" initial="hidden" animate="visible"
+      
+      {loading && (
+        <div className="flex items-center gap-2 px-1 py-2 text-xs text-muted-foreground">
+          <Spinner className="size-3 text-muted-foreground" />
+          <span>Loading…</span>
+        </div>
+      )}
+      {loading && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => <SkeletonStatCard key={i} />)}
+        </div>
+      )}
+      {!loading && <motion.div className="grid grid-cols-2 lg:grid-cols-4 gap-4" initial="hidden" animate="visible"
         variants={{ visible: { transition: { staggerChildren: 0.06 } } }}>
         {metrics.map((m, i) => {
           const Icon = m.Icon;
+          const isPositive = m.delta.startsWith("+") || m.delta.startsWith("−") && m.viz === "inverse" || m.delta.startsWith("−") && (m.viz === "gauge");
+          const deltaColor = (m.delta.startsWith("+") && m.viz !== "inverse") || (m.delta.startsWith("−") && (m.viz === "gauge" || m.viz === "inverse"))
+            ? "text-emerald-600 dark:text-emerald-400"
+            : "text-rose-500";
           return (
             <MotionCard
               key={i}
@@ -123,23 +153,91 @@ export default function Analytics() {
               whileHover={{ y: -3, boxShadow: "0 12px 28px rgba(0,0,0,0.08)" }}
               className="cursor-default"
             >
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <motion.div whileHover={{ scale: 1.15, rotate: 5 }} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${m.color}18` }}>
+              <CardContent className="p-4 flex flex-col gap-2">
+                {/* Header */}
+                <div className="flex items-start justify-between">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${m.color}18` }}>
                     <Icon size={16} style={{ color: m.color }} />
-                  </motion.div>
-                  <span className="text-xs font-semibold text-primary bg-brand-50 dark:bg-brand-900/20 px-2 py-0.5 rounded-full font-mono-data">{m.delta}</span>
+                  </div>
+                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-muted ${deltaColor}`}>{m.delta}</span>
                 </div>
-                <div className="text-lg font-semibold tracking-tight text-foreground">{m.val}</div>
-                <div className="text-xs text-muted-foreground mt-0.5">{m.label}</div>
+
+                {/* Value + label */}
+                <div>
+                  <div className="text-lg font-bold tracking-tight text-foreground leading-tight">{m.val}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{m.label}</div>
+                </div>
+
+                {/* Visualization */}
+                {m.viz === "sparkbar" && m.sparkData && (
+                  <div className="flex items-end gap-0.5 h-8 mt-1">
+                    {m.sparkData.map((d, j) => {
+                      const max = Math.max(...m.sparkData!.map(x => x.v));
+                      const h = Math.round((d.v / max) * 100);
+                      const isLast = j === m.sparkData!.length - 1;
+                      return (
+                        <motion.div key={j} className="flex-1 rounded-sm self-end"
+                          style={{ height: `${h}%`, background: isLast ? m.color : `${m.color}40` }}
+                          initial={{ scaleY: 0, originY: 1 }} animate={{ scaleY: 1 }}
+                          transition={{ delay: 0.1 + j * 0.05, duration: 0.4, ease: "easeOut" }}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+
+                {m.viz === "radial" && m.pct !== undefined && (
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="w-10 h-10 shrink-0">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RadialBarChart innerRadius="60%" outerRadius="100%" startAngle={90} endAngle={90 - 360 * (m.pct / 100)} data={[{ value: m.pct }]}>
+                          <RadialBar dataKey="value" fill={m.color} background={{ fill: "var(--muted)" }} cornerRadius={3} />
+                        </RadialBarChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                      <motion.div className="h-full rounded-full" style={{ background: m.color }}
+                        initial={{ width: 0 }} animate={{ width: `${m.pct}%` }}
+                        transition={{ duration: 1, delay: 0.2 + i * 0.06, ease: "easeOut" }} />
+                    </div>
+                  </div>
+                )}
+
+                {m.viz === "gauge" && m.pct !== undefined && (
+                  <div className="mt-1 space-y-1">
+                    <div className="flex justify-between text-[9px] text-muted-foreground"><span>Fast</span><span>Slow</span></div>
+                    <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                      <motion.div className="h-full rounded-full" style={{ background: m.color }}
+                        initial={{ width: 0 }} animate={{ width: `${m.pct}%` }}
+                        transition={{ duration: 1, delay: 0.2 + i * 0.06, ease: "easeOut" }} />
+                    </div>
+                  </div>
+                )}
+
+                {m.viz === "inverse" && m.pct !== undefined && (
+                  <div className="mt-1 space-y-1">
+                    <div className="flex justify-between text-[9px] text-muted-foreground"><span>Low (good)</span><span>High</span></div>
+                    <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                      <motion.div className="h-full rounded-full" style={{ background: m.color }}
+                        initial={{ width: 0 }} animate={{ width: `${m.pct}%` }}
+                        transition={{ duration: 1, delay: 0.2 + i * 0.06, ease: "easeOut" }} />
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </MotionCard>
           );
         })}
-      </motion.div>
+      </motion.div>}
 
       {/* Charts row 1 */}
-      <div className="grid lg:grid-cols-3 gap-5">
+      {loading && (
+        <div className="grid lg:grid-cols-3 gap-5">
+          <div className="lg:col-span-2"><SkeletonChartCard /></div>
+          <SkeletonChartCard />
+        </div>
+      )}
+      {!loading && <div className="grid lg:grid-cols-3 gap-5">
         <Section delay={0.05} className="lg:col-span-2">
           <Card>
             <div className="p-5 pb-4">
@@ -195,10 +293,16 @@ export default function Analytics() {
             </CardContent>
           </Card>
         </Section>
-      </div>
+      </div>}
 
       {/* Charts row 2 */}
-      <div className="grid lg:grid-cols-2 gap-5">
+      {loading && (
+        <div className="grid lg:grid-cols-2 gap-5">
+          <SkeletonChartCard />
+          <SkeletonChartCard />
+        </div>
+      )}
+      {!loading && <div className="grid lg:grid-cols-2 gap-5">
         <Section delay={0.08}>
           <Card>
             <div className="p-5 pb-4">
@@ -261,7 +365,7 @@ export default function Analytics() {
             </CardContent>
           </Card>
         </Section>
-      </div>
+      </div>}
     </div>
     </div>
   );
