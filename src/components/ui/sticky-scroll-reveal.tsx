@@ -81,11 +81,10 @@ export const StickyScroll = ({
                     "relative w-full overflow-hidden bg-[#0a0a0f] border-t border-white/[0.06]",
                     contentClassName,
                   )}
-                  style={{ height: 320 }}
                 >
                   {item.content}
                   <div
-                    className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none"
+                    className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none"
                     style={{ background: `linear-gradient(to top, ${accent}18, transparent)` }}
                   />
                 </div>
@@ -99,13 +98,13 @@ export const StickyScroll = ({
       <div
         ref={containerRef}
         className={cn(
-          "relative hidden lg:flex justify-center gap-12 overflow-y-auto rounded-2xl",
+          "relative hidden lg:flex justify-between gap-8 xl:gap-12 overflow-y-auto rounded-2xl px-2",
           containerHeight,
         )}
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
       >
         {/* Left — scrolling step titles */}
-        <div className="relative flex items-start py-10 px-2">
+        <div className="relative flex items-start py-10 px-2 flex-1 min-w-0">
           <div className="max-w-sm">
             {content.map((item, index) => (
               <div
@@ -157,10 +156,10 @@ export const StickyScroll = ({
           </div>
         </div>
 
-        {/* Right — sticky visual panel */}
+        {/* Right — sticky visual panel (responsive square, never overflows the row) */}
         <div
           className={cn(
-            "sticky top-10 flex h-[420px] w-[420px] shrink-0 items-center justify-center self-start rounded-2xl overflow-hidden border border-white/[0.08] bg-[#0a0a0f]",
+            "sticky top-4 w-[38%] max-w-[480px] min-w-[280px] h-[calc(100%-2rem)] shrink-0 self-start rounded-2xl overflow-hidden border border-white/[0.08] bg-[#0a0a0f]",
             contentClassName,
           )}
         >

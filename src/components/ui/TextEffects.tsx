@@ -1,13 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import { motion, useInView } from "framer-motion";
+import { memo, useEffect, useRef, useState } from "react";
+import { motion, useInView, useAnimation, AnimatePresence } from "framer-motion";
 
-export function TextReveal({
-  text,
-  className = "",
-}: {
-  text: string;
-  className?: string;
-}) {
+export function TextReveal({ text, className = "" }: { text: string; className?: string }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
 
@@ -25,33 +19,18 @@ export function TextReveal({
   );
 }
 
-export function GradientText({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
+export function GradientText({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <span
       className={`bg-clip-text text-transparent ${className}`}
-      style={{
-        backgroundImage:
-          "linear-gradient(135deg, #74AE76 0%, #4C9150 40%, #1B7FAE 100%)",
-      }}
+      style={{ backgroundImage: "linear-gradient(135deg, #74AE76 0%, #4C9150 40%, #1B7FAE 100%)" }}
     >
       {children}
     </span>
   );
 }
 
-export function TypewriterText({
-  words,
-  className = "",
-}: {
-  words: string[];
-  className?: string;
-}) {
+export function TypewriterText({ words, className = "" }: { words: string[]; className?: string }) {
   const [idx, setIdx] = useState(0);
   const [displayed, setDisplayed] = useState("");
   const [deleting, setDeleting] = useState(false);
@@ -59,10 +38,7 @@ export function TypewriterText({
   useEffect(() => {
     const word = words[idx];
     if (!deleting && displayed.length < word.length) {
-      const t = setTimeout(
-        () => setDisplayed(word.slice(0, displayed.length + 1)),
-        80,
-      );
+      const t = setTimeout(() => setDisplayed(word.slice(0, displayed.length + 1)), 80);
       return () => clearTimeout(t);
     }
     if (!deleting && displayed.length === word.length) {
@@ -91,15 +67,7 @@ export function TypewriterText({
   );
 }
 
-export function FadeUpSection({
-  children,
-  className = "",
-  delay = 0,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  delay?: number;
-}) {
+export const FadeUpSection = memo(function FadeUpSection({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-60px" });
 
@@ -114,15 +82,9 @@ export function FadeUpSection({
       {children}
     </motion.div>
   );
-}
+});
 
-export function StaggerChildren({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
+export const StaggerChildren = memo(function StaggerChildren({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-60px" });
 
@@ -137,27 +99,15 @@ export function StaggerChildren({
       {children}
     </motion.div>
   );
-}
+});
 
 export const staggerItem = {
   hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
-  },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 };
 
-export function AnimatedCounter({
-  target,
-  suffix = "",
-  prefix = "",
-  className = "",
-}: {
-  target: number;
-  suffix?: string;
-  prefix?: string;
-  className?: string;
+export const AnimatedCounter = memo(function AnimatedCounter({ target, suffix = "", prefix = "", className = "" }: {
+  target: number; suffix?: string; prefix?: string; className?: string;
 }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
@@ -171,19 +121,15 @@ export function AnimatedCounter({
     const increment = target / steps;
     const timer = setInterval(() => {
       start += increment;
-      if (start >= target) {
-        setVal(target);
-        clearInterval(timer);
-      } else setVal(Math.floor(start));
+      if (start >= target) { setVal(target); clearInterval(timer); }
+      else setVal(Math.floor(start));
     }, duration / steps);
     return () => clearInterval(timer);
   }, [isInView, target]);
 
   return (
     <span ref={ref} className={className}>
-      {prefix}
-      {val.toLocaleString()}
-      {suffix}
+      {prefix}{val.toLocaleString()}{suffix}
     </span>
   );
-}
+});

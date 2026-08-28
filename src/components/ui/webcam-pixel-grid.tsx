@@ -47,7 +47,7 @@ type PixelData = {
   currentElevation: number;
 };
 
-export const WebcamPixelGrid: React.FC<WebcamPixelGridProps> = ({
+export const WebcamPixelGrid: React.FC<WebcamPixelGridProps> = React.memo(({
   gridCols = 64,
   gridRows = 48,
   maxElevation = 15,
@@ -529,6 +529,6 @@ export const WebcamPixelGrid: React.FC<WebcamPixelGridProps> = ({
       )}
     </div>
   );
-};
+});
 
 export default WebcamPixelGrid;
