@@ -1,0 +1,355 @@
+import React, { Suspense, lazy, useState, useRef, useEffect } from "react";
+import { Outlet, useLocation, useNavigate, Navigate } from "react-router";
+import { motion, AnimatePresence, MotionConfig } from "framer-motion";
+import { ChevronDown } from "lucide-react";
+import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { useNav, PATH_TO_PAGE } from "@/hooks/useNav";
+import AppSidebar, { SidebarNavContent } from "@/components/layout/Sidebar";
+import Header from "@/components/layout/Header";
+import RightPanel from "@/components/layout/RightPanel";
+import Modal from "@/components/layout/Modal";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { useQueryClient } from "@tanstack/react-query";
+import { useWsEvent } from "@/contexts/WebSocketContext";
+import { toast } from "@/store/toastStore";
+
+const DeliveryTracking = lazy(() => import("@/features/deliveries/DeliveryTracking"));
+const DonationDetails = lazy(() => import("@/features/donations/DonationDetails"));
+
+const breadcrumbs: Record<string, string[]> = {
+  "donor-dashboard":    ["Donor", "Dashboard"],
+  "donor-donations":    ["Donor", "My Donations"],
+  "create-donation":    ["Donor", "Create Donation"],
+  "donor-impact":       ["Donor", "Impact"],
+  "ngo-dashboard":      ["NGO", "Dashboard"],
+  "ngo-requirements":   ["NGO", "Food Requirements"],
+  "ngo-accepted":       ["NGO", "Accepted Donations"],
+  "ngo-impact":         ["NGO", "Impact"],
+  "volunteer-dashboard":["Volunteer", "Dashboard"],
+  "my-deliveries":      ["Volunteer", "My Deliveries"],
+  "admin-dashboard":    ["Admin", "Dashboard"],
+  "admin-donations":    ["Admin", "Donation Monitoring"],
+  "admin-deliveries":   ["Admin", "Delivery Monitoring"],
+  "audit-logs":         ["Admin", "Audit Logs"],
+  analytics:            ["Analytics"],
+  notifications:        ["Notifications"],
+  messaging:            ["Messages"],
+  settings:             ["Settings"],
+};
+
+function PageSkeleton() {
+  return (
+    <div className="p-6 space-y-5 animate-pulse">
+      <div className="h-32 rounded-xl bg-muted" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => <div key={i} className="h-24 rounded-xl bg-muted" />)}
+      </div>
+      <div className="grid lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 h-64 rounded-xl bg-muted" />
+        <div className="h-64 rounded-xl bg-muted" />
+      </div>
+    </div>
+  );
+}
+
+function ScrollFade({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [atBottom, setAtBottom] = useState(false);
+  const [hasOverflow, setHasOverflow] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const check = () => {
+      const overflow = el.scrollHeight > el.clientHeight + 4;
+      const bottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 8;
+      setHasOverflow(overflow);
+      setAtBottom(bottom);
+    };
+
+    check();
+    el.addEventListener("scroll", check, { passive: true });
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => { el.removeEventListener("scroll", check); ro.disconnect(); };
+  }, []);
+
+  const showIndicator = hasOverflow && !atBottom;
+
+  return (
+    <div className="relative flex-1 flex flex-col min-h-0 overflow-hidden">
+      <div
+        ref={ref}
+        className="flex-1 overflow-y-auto flex flex-col min-w-0 scroll-hide"
+      >
+        {children}
+      </div>
+
+      {/* Bottom fade gradient */}
+      <AnimatePresence>
+        {showIndicator && (
+          <motion.div
+            key="fade"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="pointer-events-none absolute bottom-0 left-0 right-0 h-20"
+            style={{
+              background: "linear-gradient(to top, var(--background) 0%, transparent 100%)",
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Scroll indicator pill */}
+      <AnimatePresence>
+        {showIndicator && (
+          <motion.button
+            key="pill"
+            initial={{ opacity: 0, y: 8, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.9 }}
+            transition={{ duration: 0.25 }}
+            onClick={() => ref.current?.scrollBy({ top: 200, behavior: "smooth" })}
+            className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-foreground/90 text-background text-[11px] font-semibold shadow-lg backdrop-blur-sm z-10 hover:bg-foreground transition-colors"
+          >
+            <motion.span
+              animate={{ y: [0, 2, 0] }}
+              transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <ChevronDown size={11} />
+            </motion.span>
+            Scroll
+          </motion.button>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function useRealTimeEvents() {
+  const qc = useQueryClient();
+
+  useWsEvent("DONATION_CREATED", () => {
+    qc.invalidateQueries({ queryKey: ["donations"] });
+    qc.invalidateQueries({ queryKey: ["admin-stats"] });
+  });
+
+  useWsEvent("DONATION_MATCHED", (e) => {
+    qc.invalidateQueries({ queryKey: ["donations"] });
+    qc.invalidateQueries({ queryKey: ["conversations"] });
+    const ngoName = (e.payload as { ngoName?: string })?.ngoName;
+    toast.success("Donation Matched!", ngoName ? `Matched with ${ngoName}` : "Your donation was matched.");
+  });
+
+  useWsEvent("DELIVERY_ASSIGNED", (e) => {
+    qc.invalidateQueries({ queryKey: ["deliveries"] });
+    const vol = (e.payload as { volunteerName?: string })?.volunteerName;
+    toast.info("Volunteer Assigned", vol ? `${vol} will handle this delivery.` : "A volunteer has been assigned.");
+  });
+
+  useWsEvent("DELIVERY_COMPLETED", () => {
+    qc.invalidateQueries({ queryKey: ["deliveries"] });
+    qc.invalidateQueries({ queryKey: ["impact"] });
+    toast.success("Delivery Completed", "The food has been delivered successfully.");
+  });
+
+  useWsEvent("MESSAGE_RECEIVED", () => {
+    qc.invalidateQueries({ queryKey: ["conversations"] });
+  });
+}
+
+function Shell() {
+  const { containerRef } = useTheme();
+  const { role } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const onNavigate = useNav();
+  const isMobile = useIsMobile();
+  const isXl = !useIsMobile(1280);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useRealTimeEvents();
+
+  const searchParams = new URLSearchParams(location.search);
+  const modal = searchParams.get("modal");
+
+  const currentPage = PATH_TO_PAGE[location.pathname] ?? "";
+  const crumbs = breadcrumbs[currentPage] ?? [currentPage];
+
+  // Routes that manage their own internal scroll (bypass ScrollFade)
+  const SELF_SCROLLING = new Set(["/app/messaging"]);
+  const isSelfScrolling = SELF_SCROLLING.has(location.pathname);
+
+  const closeModal = () => {
+    searchParams.delete("modal");
+    const qs = searchParams.toString();
+    navigate(`${location.pathname}${qs ? `?${qs}` : ""}`, { replace: true });
+  };
+
+  return (
+    <MotionConfig transition={isMobile ? { duration: 0.12, ease: "easeOut" } : undefined}>
+      <div ref={containerRef} className="flex h-screen bg-background overflow-hidden">
+        <AppSidebar currentPage={currentPage} onNavigate={onNavigate} />
+
+        {/* Mobile sidebar drawer */}
+        <AnimatePresence>
+          {sidebarOpen && (
+            <>
+              <motion.div
+                key="overlay"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => setSidebarOpen(false)}
+                className="fixed inset-0 bg-black/40 z-40 md:hidden backdrop-blur-sm"
+              />
+              <motion.div
+                key="drawer"
+                initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
+                transition={{ type: "spring", stiffness: 300, damping: 32 }}
+                className="fixed inset-y-0 left-0 z-50 md:hidden shadow-xl w-[224px]"
+              >
+                <SidebarNavContent
+                  currentPage={currentPage}
+                  onNavigate={(p) => { onNavigate(p); setSidebarOpen(false); }}
+                  onClose={() => setSidebarOpen(false)}
+                  expanded={true}
+                />
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <Header
+            title={crumbs[crumbs.length - 1]}
+            breadcrumb={crumbs}
+            onMenuToggle={() => setSidebarOpen(true)}
+            onNavigate={onNavigate}
+          />
+          <div className="flex-1 flex min-h-0 overflow-hidden">
+            {isXl ? (
+              <ResizablePanelGroup
+                direction="horizontal"
+                className="flex-1 min-h-0 overflow-hidden"
+              >
+                {/* Main content — 74% default, clamps 60–85% */}
+                <ResizablePanel defaultSize="74" minSize="60" maxSize="85" style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}>
+                  {isSelfScrolling ? (
+                    <div className="h-full flex flex-col overflow-hidden">
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={location.pathname}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="flex-1 flex flex-col min-h-0 h-full overflow-hidden"
+                        >
+                          <Suspense fallback={<PageSkeleton />}>
+                            <Outlet />
+                          </Suspense>
+                        </motion.div>
+                      </AnimatePresence>
+                    </div>
+                  ) : (
+                  <ScrollFade>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={location.pathname}
+                        initial={{ opacity: 0, y: 14 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                        className="flex-1 flex flex-col min-h-0"
+                      >
+                        <Suspense fallback={<PageSkeleton />}>
+                          <Outlet />
+                        </Suspense>
+                      </motion.div>
+                    </AnimatePresence>
+                  </ScrollFade>
+                  )}
+                </ResizablePanel>
+                <ResizableHandle withHandle />
+                {/* Right panel — 26% default, clamps 15–40%, CSS floor 240px */}
+                <ResizablePanel defaultSize="22" minSize="20" maxSize="25">
+                  <div className="h-full" style={{ minWidth: 240 }}>
+                    <RightPanel role={role} onNavigate={onNavigate} />
+                  </div>
+                </ResizablePanel>
+              </ResizablePanelGroup>
+            ) : isSelfScrolling ? (
+              <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={location.pathname}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex-1 flex flex-col min-h-0 overflow-hidden"
+                  >
+                    <Suspense fallback={<PageSkeleton />}>
+                      <Outlet />
+                    </Suspense>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            ) : (
+              <ScrollFade>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={location.pathname}
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex-1 flex flex-col min-h-0"
+                  >
+                    <Suspense fallback={<PageSkeleton />}>
+                      <Outlet />
+                    </Suspense>
+                  </motion.div>
+                </AnimatePresence>
+              </ScrollFade>
+            )}
+          </div>
+        </div>
+
+        <Modal open={modal === "donation-details"} onClose={closeModal} size="xl">
+          <Suspense fallback={null}>
+            <DonationDetails />
+          </Suspense>
+        </Modal>
+        <Modal open={modal === "delivery-tracking"} onClose={closeModal} size="xl">
+          <Suspense fallback={null}>
+            <DeliveryTracking />
+          </Suspense>
+        </Modal>
+      </div>
+    </MotionConfig>
+  );
+}
+
+export default function AppLayout() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) return (
+    <div className="flex h-screen items-center justify-center bg-background">
+      <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+    </div>
+  );
+
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  return (
+    <ThemeProvider>
+      <Shell />
+    </ThemeProvider>
+  );
+}

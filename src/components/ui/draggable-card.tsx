@@ -111,7 +111,7 @@ export const DraggableCardBody = ({
       onDragStart={() => {
         document.body.style.cursor = "grabbing";
       }}
-      onDragEnd={(_, info) => {
+      onDragEnd={(event, info) => {
         document.body.style.cursor = "default";
 
         controls.start({
